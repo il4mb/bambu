@@ -1,0 +1,15 @@
+{
+    "name": "@bambu/dev",
+    "scripts": {
+        "dev": "bun --watch ./src/index.html"
+    },
+    "dependencies": {
+        "@types/react": "^19.2.18",
+        "@types/react-dom": "^19.2.5",
+        "react": "^19.2.8",
+        "react-dom": "^19.2.8",
+        "@bambu/node": "workspace:*",
+        "@bambu/styled": "workspace:*",
+        "@bambu/react": "workspace:*"
+    }
+}

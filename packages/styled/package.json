@@ -1,0 +1,33 @@
+{
+    "name": "@bambu/styled",
+    "module": "index.ts",
+    "type": "module",
+    "exports": {
+        ".": "./src/index.ts"
+    },
+    "peerDependencies": {
+        "@bambu/node": "workspace:*",
+        "@bambu/react": "workspace:*",
+        "@emotion/react": "^11.14.0",
+        "@emotion/styled": "^11.14.1",
+        "@mui/material": "^9.4.0",
+        "@tbela99/css-parser": "^1.5.0",
+        "glob": "^13.0.6",
+        "lodash": "^4.18.1",
+        "nanoid": "^6.0.1",
+        "react": "19.2.4"
+    },
+    "devDependencies": {
+        "@types/node": "^20",
+        "@types/react": "^19",
+        "typescript": "7.0.2"
+    },
+    "dependencies": {
+        "@types/lodash": "^4.17.25",
+        "@types/react-dom": "^19.2.5",
+        "color": "^5.0.3",
+        "lucide-react": "^1.37.0",
+        "motion": "^13.1.1",
+        "react-dom": "^19.2.8"
+    }
+}
