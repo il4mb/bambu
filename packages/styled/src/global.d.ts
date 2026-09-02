@@ -1,4 +1,5 @@
 import "@bambu/node";
+import "@tbela99/css-parser";
 import { CSSProperties } from "react";
 
 declare module '@tbela99/css-parser/web' {

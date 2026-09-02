@@ -40,12 +40,12 @@ export namespace Color {
         };
     };
 
-    export const format = (obj: IColor | IColorHSL): string => {
+    export const format = (obj: IColor | IColorHSL, type: IColorType = 'hex'): string => {
         if (!obj) return '';
 
         if ('h' in obj || 's' in obj || 'l' in obj) {
             return format({
-                type: 'hex',
+                type,
                 // @ts-ignore
                 data: { h: 50, s: 1, l: 0.5, ...obj },
                 // @ts-ignore
@@ -53,12 +53,12 @@ export namespace Color {
             });
         }
 
-        const { type, data, alpha } = obj;
+        const { type: objType, data, alpha } = obj;
         const color = chroma.hsl(data.h, data.s, data.l).alpha(alpha);
         const alphaChannel = Boolean(alpha < 1);
 
         const formatValue = (v: number): number => (v > -1 && v < 1 && v !== 0) ? Math.floor(v * 10) / 10 : Math.floor(v);
-        switch (type) {
+        switch (type ?? objType) {
             case "hsl": {
                 const rawHsla = color.hsl();
                 const values = alphaChannel ? rawHsla : rawHsla.slice(0, 3);

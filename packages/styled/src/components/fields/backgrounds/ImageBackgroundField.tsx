@@ -58,6 +58,9 @@ export default function ImageBackgroundField({ value, onChange }: ImageBackgroun
                     <MenuItem value="repeat-x">Repeat X</MenuItem>
                     <MenuItem value="repeat-y">Repeat Y</MenuItem>
                 </SelectField>
+                <Box>
+                    
+                </Box>
             </Box>
         </Box>
     );

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import PropertyGroup from "../PropertyGroup";
 import { useStyled } from "@/hooks/useStyled";
-import { Box, CircularProgress, IconButton, Menu, MenuItem } from "@mui/material";
+import { Box, CircularProgress, IconButton, Menu, MenuItem, Typography } from "@mui/material";
 import _ from "lodash";
 import { Plus, Image as ImageIcon, Paintbrush, Layers } from "lucide-react";
 // import { createStopColor, parseColor } from "@/libs/color";
@@ -62,9 +62,7 @@ export function buildBackgroundStyle(backgrounds: Background[]) {
             positions.push("center");
         } else if (bg.type === "radial") {
             const pos = bg.position ? `at ${bg.position}` : "at center";
-            const stops = bg.colors
-                .map(Color.formatStop)
-                .join(", ");
+            const stops = bg.colors.map(Color.formatStop).join(", ");
             imageLayers.push(`radial-gradient(${pos}, ${stops})`);
             sizes.push("auto");
             repeats.push("no-repeat");
@@ -180,6 +178,14 @@ export default function BackgroundProperty() {
                     <ImageIcon size={14} style={{ marginRight: 8 }} /> Image
                 </MenuItem>
             </Menu>
+
+            {backgrounds.length === 0 && (
+                <Box sx={{ p: 1, textAlign: "center" }}>
+                    <Typography sx={{ fontSize: 12, fontStyle: "italic", color: "text.secondary" }}>
+                        No Background Items
+                    </Typography>
+                </Box>
+            )}
             <Reorder.Group
                 as="div"
                 axis="y"

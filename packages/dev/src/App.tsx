@@ -34,6 +34,7 @@ export default function App({}: AppProps) {
                     style: {
                         padding: "40px",
                         height: '300px',
+                        width: 'max(100px, 100vw)',
                         backgroundImage:
                             "linear-gradient(to right, #ff000046, #001faa4b), url(https://cdn.pixabay.com/photo/2025/09/18/17/32/woman-9841606_1280.jpg)",
                         backgroundColor: "#ff0ff0",

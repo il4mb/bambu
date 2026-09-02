@@ -10,6 +10,8 @@ import FontWightProperty from "./components/properties/FontWightProperty";
 import PaddingProperty from "./components/properties/PaddingProperty";
 import MarginProperty from "./components/properties/MarginProperty";
 import BackgroundProperty from "./components/properties/BackgroundProperty";
+import WidthProperty from "./components/properties/WidthProperty";
+import HeightProperty from "./components/properties/HeightProperty";
 
 type StyledManagerContext = {
     target: Node[];
@@ -55,6 +57,8 @@ export default function StyledManager({}: StyleManagerProps) {
                 <ColorProperty />
                 <PaddingProperty />
                 <MarginProperty />
+                <WidthProperty />
+                <HeightProperty />
                 <BackgroundProperty />
             </Box>
         </Context.Provider>

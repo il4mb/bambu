@@ -17,8 +17,14 @@ export interface ColorPickerPopoverProps {
     onClose?: () => void;
     open: boolean;
 }
-export default function ColorPickerPopup({ anchorEl, value, open, onChange, onClose }: ColorPickerPopoverProps) {
-    const valueRef = useRef(value);
+export default function ColorPickerPopup({
+    anchorEl,
+    value = placeholder,
+    open,
+    onChange,
+    onClose,
+}: ColorPickerPopoverProps) {
+    const valueRef = useRef({ ...placeholder, ...value });
     const handleSaturationChange = (s: number, l: number) => {
         const prev = valueRef.current ?? placeholder;
         onChange?.({ ...prev, data: { ...prev.data, s, l } });
