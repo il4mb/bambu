@@ -25,17 +25,14 @@ const UNITS = Array.from(
 type WidthProps = {};
 
 export default function WidthProperty({}: WidthProps) {
-    const [value, setValue] = useStyled<csstree.CssNode>(
+    const [value, setValue] = useStyled<string>(
         (nodes) => {
             return Array.from(nodes).reduce((prev, curr) => {
                 if (curr.data.style?.width) {
-                    const widthString = String(curr.data.style?.width);
-                    if (widthString !== "none") {
-                        return csstree.parse(widthString, { context: "value" });
-                    }
+                    return String(curr.data.style?.width);
                 }
                 return prev;
-            }, {} as csstree.CssNode);
+            }, '');
         },
         (node, value) => {
             // node.set("data.style", (prev) => ({
@@ -50,7 +47,7 @@ export default function WidthProperty({}: WidthProps) {
             {/* <NumberField units={UNITS} value={value} onChange={setValue} /> */}
             {/* {value} */}
             {/* {csstree.walk(value, (n) => <Typography></Typography>)} */}
-            {value && <ASTEditor node={value} />}
+            <div style={{ width: 100, height: 100 }}>{value && <ASTEditor code={'cacl(100px - 50px)'} context="value" />}</div>
         </PropertyLayout>
     );
 }

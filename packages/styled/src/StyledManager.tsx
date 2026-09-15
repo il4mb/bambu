@@ -51,15 +51,15 @@ export default function StyledManager({}: StyleManagerProps) {
         <Context.Provider value={{ target: nodes }}>
             <h1>StyleManager</h1>
             <Box sx={{ px: 1, display: "flex", flexDirection: "column", gap: 0.5 }}>
-                <DisplayProperty />
+                {/* <DisplayProperty />
                 <FontSizeProperty />
                 <FontWightProperty />
                 <ColorProperty />
                 <PaddingProperty />
-                <MarginProperty />
+                <MarginProperty /> */}
                 <WidthProperty />
-                <HeightProperty />
-                <BackgroundProperty />
+                {/* <HeightProperty /> */}
+                {/* <BackgroundProperty /> */}
             </Box>
         </Context.Provider>
     );

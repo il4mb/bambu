@@ -9,7 +9,13 @@
                 margin: 0;
                 box-sizing: border-box;
             }
-            body, #root {
+            body,
+            #root {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
                 display: flex;
                 flex-direction: column;
                 min-width: 100vw;
@@ -18,7 +24,24 @@
                 background: #17171a;
                 color: #fff;
             }
-
+            .function {
+                color: rgb(252, 123, 123);
+            }
+            .char {
+                color: rgb(255, 255, 255);
+            }
+            .word {
+                color: rgb(105, 170, 255);
+            }
+            .atrule {
+                color: rgb(255, 100, 100);
+            }
+            .atrule > .word {
+                color: rgb(225, 174, 174);
+            }
+            .line {
+                display: block;
+            }
         </style>
     </head>
     <body>
