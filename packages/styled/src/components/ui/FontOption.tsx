@@ -14,7 +14,7 @@ export default function FontOption({ option, ...props }: FontOptionProps) {
     const [visible, setVisible] = useState(false);
     const liRef = useRef<HTMLLIElement | null>(null);
 
-    const fontKey = `${option.family}-${option.version}`;
+    const fontKey = `${option.family}-regular`;
 
     // Track *live* visibility. The observer stays connected so we see
     // both enter and exit events.
@@ -45,7 +45,7 @@ export default function FontOption({ option, ...props }: FontOptionProps) {
     // it keeps going; only the last release actually aborts.
     useEffect(() => {
         if (!webfonts || !visible) return;
-        const lease = webfonts.acquireFont(option);
+        const lease = webfonts.acquireFont(option, "regular");
         return () => lease.release();
     }, [webfonts, visible, option]);
 

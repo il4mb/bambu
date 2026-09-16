@@ -1,6 +1,8 @@
-import { Box, Fade, IconButton, SxProps, Typography } from "@mui/material";
+import { Box, Fade, SxProps, Typography } from "@mui/material";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { ReactNode, useState } from "react";
+import ActionButton from "./ui/ActionButton";
+import { motion, AnimatePresence } from "motion/react";
 
 export interface PropertyProps {
     label: string;
@@ -10,28 +12,33 @@ export interface PropertyProps {
     defaultExpanded?: boolean;
     actions?: ReactNode;
 }
-export default function PropertyGroup({
-    label,
-    children,
-    defaultExpanded = false,
-    actions,
-}: PropertyProps) {
+export default function PropertyGroup({ label, children, defaultExpanded = false, actions }: PropertyProps) {
     const [expand, setExpand] = useState(defaultExpanded);
     const toggleExpand = () => setExpand((prev) => !prev);
     return (
-        <Box>
+        <Box sx={{ pb: 1 }}>
             <Box sx={{ flex: 1, display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
-                <Typography sx={{ fontSize: 12, flex: 1 }} component={"span"}>
+                <Typography sx={{ fontSize: 12, flex: 1, fontWeight: 800 }} component={"span"}>
                     {label}
                 </Typography>
-                <IconButton onClick={toggleExpand}>
-                    {expand ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                </IconButton>
-                {actions}
+                <Box sx={{ display: "flex", flexDirection: "row", gap: 0.5, alignItems: "center" }}>
+                    <ActionButton onClick={toggleExpand}>
+                        {expand ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                    </ActionButton>
+                    {actions}
+                </Box>
             </Box>
-            <Fade in={expand}>
-                <Box>{children}</Box>
-            </Fade>
+            <AnimatePresence>
+                {expand && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                    >
+                        <Box>{children}</Box>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </Box>
     );
 }

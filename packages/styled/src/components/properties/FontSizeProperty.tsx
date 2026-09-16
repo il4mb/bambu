@@ -27,7 +27,7 @@ export default function FontSizeProperty({}: FontSizeProps) {
     );
 
     return (
-        <PropertyLayout label="Font Size">
+        <PropertyLayout label="Size">
             <NumberField units={TYPOGRAPHY_UNITS} value={value} onChange={setValue} />
         </PropertyLayout>
     );

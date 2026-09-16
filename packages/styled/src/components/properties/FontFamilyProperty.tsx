@@ -7,16 +7,11 @@ import FontOption from "../ui/FontOption";
 import FontInput from "../ui/FontInput";
 import FontWeightProperty from "./FontWightProperty";
 
-/**
- * Distance (px) the popper keeps from the viewport edge. Tuned so the
- * dropdown doesn't overlap the left sidebar; bump if the shell changes.
- */
 const POPPER_EDGE_PADDING = 106;
-
-const POPPER_MAX_HEIGHT = 300;
 const POPPER_MIN_WIDTH = 200;
 
 export default function FontFamilyProperty() {
+
     const [value, setValue] = useStyled<string>(
         (nodes) => {
             const all = Array.from(nodes)
@@ -36,10 +31,10 @@ export default function FontFamilyProperty() {
             node.set("data.style", (prev) => ({
                 ...prev,
                 fontFamily: value,
+                fontWeight: "400",
             }));
         },
     );
-
     const [filter, setFilter] = useState<string | null>(null);
     const { fonts, loading, fetch } = useFonts();
     const fetchedRef = useRef(false);
@@ -59,7 +54,6 @@ export default function FontFamilyProperty() {
         [fonts],
     );
 
-    // Client-side filter — matches family or category.
     const filteredOptions = useMemo<FontItem[]>(() => {
         if (!filter) return options;
         const q = filter.trim().toLowerCase();
@@ -72,7 +66,6 @@ export default function FontFamilyProperty() {
         [options, value],
     );
 
-    /** Commit the typed filter as the styled value (freeSolo path). */
     const commitFreeSolo = () => {
         const trimmed = (filter ?? "").trim();
         if (!trimmed) return;
@@ -83,7 +76,7 @@ export default function FontFamilyProperty() {
 
     return (
         <Fragment>
-            <PropertyLayout label="Font Family">
+            <PropertyLayout label="Family">
                 <Autocomplete<FontItem, false, false, true>
                     freeSolo
                     options={filteredOptions}

@@ -13,6 +13,7 @@ import BackgroundProperty from "./components/properties/BackgroundProperty";
 import WidthProperty from "./components/properties/WidthProperty";
 import HeightProperty from "./components/properties/HeightProperty";
 import FontFamilyProperty from "./components/properties/FontFamilyProperty";
+import FontProperty from "./components/properties/FontProperty";
 
 type StyledManagerContext = {
     target: Node[];
@@ -50,12 +51,9 @@ export default function StyledManager({}: StyleManagerProps) {
 
     return (
         <Context.Provider value={{ target: nodes }}>
-           
             <Box sx={{ px: 1, display: "flex", flexDirection: "column", gap: 0.5 }}>
                 <DisplayProperty />
-                <FontSizeProperty />
-                <FontFamilyProperty />
-                <FontWightProperty />
+                <FontProperty />
                 <ColorProperty />
                 <PaddingProperty />
                 <MarginProperty />

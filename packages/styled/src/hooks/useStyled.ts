@@ -47,9 +47,18 @@ export const useStyled = function <T>(
 
         updateValue();
 
+        const subscriptions = target.map((node) => {
+            const onChange = () => {
+                updateValue();
+            };
+            node.on("data.style", onChange);
+            return () => node.off("data.style", onChange);
+        });
+
         return () => {
             // Cancel pending async assignments when target changes or unmounts
             requestIdRef.current++;
+            subscriptions.forEach((unsubscribe) => unsubscribe());
         };
     }, [target]);
 
@@ -85,9 +94,7 @@ export const useProperty = function <T = string>(property: keyof CSSProperties, 
         (nodes) => {
             const nodeArray = Array.from(nodes);
             if (nodeArray.length === 0) return defaultValue;
-
             const firstValue = (nodeArray[0].data.style?.[property] as T) || defaultValue;
-
             const allMatch = nodeArray.every(
                 (node) => ((node.data.style?.[property] as T) || defaultValue) === firstValue,
             );

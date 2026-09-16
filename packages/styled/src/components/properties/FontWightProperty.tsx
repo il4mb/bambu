@@ -4,39 +4,46 @@ import { MenuItem } from "@mui/material";
 import PropertyLayout from "../PropertyLayout";
 import { useMemo } from "react";
 
-const WEIGHT_VALUES = [
-    { label: "Thin", value: "100" },
-    { label: "Extra Light", value: "200" },
-    { label: "Light", value: "300" },
-    { label: "Normal", value: "400" },
-    { label: "Medium", value: "500" },
-    { label: "Semi Bold", value: "600" },
-    { label: "Bold", value: "700" },
-    { label: "Extra Bold", value: "800" },
-    { label: "Black", value: "900" },
-];
-const WEIGHT_LABELS_MAP = WEIGHT_VALUES.reduce(
-    (acc, { label, value }) => {
-        acc[value] = label;
-        return acc;
-    },
-    {} as Record<string, string>,
+const WEIGHT_MAP = {
+    thin: "100",
+    extralight: "200",
+    light: "300",
+    regular: "400",
+    medium: "500",
+    semibold: "600",
+    bold: "700",
+    extrabold: "800",
+    black: "900",
+};
+
+const WEIGHT_LABELS_MAP = Object.fromEntries(
+    Object.entries(WEIGHT_MAP).map(([label, value]) => [value, label]),
 );
 
 type FontWeightPropertyProps = {
     variants?: string[];
 };
-export default function FontWeightProperty({ variants = [] }: FontWeightPropertyProps) {
-    const [value, setValue] = useProperty("fontWeight");
+export default function FontWeightProperty({
+    variants = ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+}: FontWeightPropertyProps) {
+    const [value, setValue] = useProperty("fontWeight", "400");
     const allVariants = useMemo(() => {
-        return [...variants].map((v) => ({
-            label: WEIGHT_LABELS_MAP[v] || v,
-            value: v,
-        }));
+        return [...variants].map((v) => {
+            if (isNaN(Number(v))) {
+                return {
+                    label: WEIGHT_LABELS_MAP[v] || v,
+                    value: WEIGHT_MAP[v] || v,
+                };
+            }
+            return {
+                label: WEIGHT_LABELS_MAP[v] || v,
+                value: v,
+            };
+        });
     }, [variants]);
 
     return (
-        <PropertyLayout label="Font Weight">
+        <PropertyLayout label="Weight">
             <SelectField value={value || ""} onChange={(e) => setValue(e.target.value)} fullWidth>
                 <MenuItem value={""}>-- Select --</MenuItem>
                 {allVariants.map((val) => (

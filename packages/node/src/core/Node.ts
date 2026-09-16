@@ -16,10 +16,13 @@ type NodeChangeEvent<T> = ChangedEvent<{
     node: Node
 }>
 
+type DataEventMap = {
+    [K in NestedKeys<NodeObject>]: (event: NodeChangeEvent<PathValue<NodeObject, K>>) => void
+}
 type EventMap = {
     element: (event: NodeChangeEvent<Element>) => void
     children: (event: NodeChangeEvent<ReadonlyMap<string, Node>>) => void
-}
+} & DataEventMap;
 
 export default class Node<T extends ModuleName = ModuleName> extends EventEmitter<EventMap> {
 

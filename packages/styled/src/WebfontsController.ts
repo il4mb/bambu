@@ -50,10 +50,10 @@ export class WebfontsController extends EventEmitter<WebfontsEventMap> {
      *
      * If the font is already loaded, `release` is a no-op.
      */
-    public acquireFont(item: FontItem): FontLease {
-        const fontKey = `${item.family}-${item.version}`;
+    public acquireFont(item: FontItem, variant: string): FontLease {
+        const fontKey = `${item.family}-${variant}`;
 
-        if (this.loadedSet.has(fontKey) || this.isFontLoaded(item)) {
+        if (this.loadedSet.has(fontKey) || this.isFontLoaded(item, variant)) {
             this.loadedSet.add(fontKey);
             return { release: () => { } };
         }
@@ -61,7 +61,7 @@ export class WebfontsController extends EventEmitter<WebfontsEventMap> {
         let entry = this.pendingMap.get(fontKey);
         if (!entry) {
             const abort = new AbortController();
-            const promise = this.fetchAndLoad(item, abort.signal)
+            const promise = this.fetchAndLoad(item, variant, abort.signal)
                 .then(() => {
                     this.loadedSet.add(fontKey);
                     this.pendingMap.delete(fontKey);
@@ -98,57 +98,46 @@ export class WebfontsController extends EventEmitter<WebfontsEventMap> {
     }
 
     /** Fire-and-forget convenience for callers that never release. */
-    public loadFont(item: FontItem): Promise<void> {
+    public loadFont(item: FontItem, variant: string = "regular"): Promise<void> {
         // 1. Acquire the font (bumps refCount, starts fetch if needed)
-        this.acquireFont(item);
+        this.acquireFont(item, variant);
 
-        const fontKey = `${item.family}-${item.version}`;
-
+        const fontKey = `${item.family}-${variant}`;
         // 2. Return the pending promise if it's currently inflight. 
         // If it's not in the map, it means it was already loaded synchronously.
         return this.pendingMap.get(fontKey)?.promise || Promise.resolve();
     }
 
 
-    private async fetchAndLoad(item: FontItem, signal: AbortSignal): Promise<void> {
+
+    private async fetchAndLoad(item: FontItem, variant: string, signal: AbortSignal): Promise<void> {
         const idoc = this.controller.document?.body?.element?.ownerDocument;
 
-        // Fetch and parse all variants in parallel
-        const loadedFaces = await Promise.all(
-            Object.entries(item.files).map(async ([variant, url]) => {
-                const { weight, style } = this.parseVariantDescriptor(variant);
+        const variantUrl = item.files[variant];
+        if (!variantUrl) {
+            throw new Error(`Variant "${variant}" not found for font "${item.family}"`);
+        }
 
-                // Fetch the bytes ourselves so we can abort mid-flight.
-                const res = await fetch(url, { signal });
-                if (!res.ok) {
-                    throw new Error(`HTTP ${res.status} for ${url}`);
-                }
-                const buf = await res.arrayBuffer();
+        const res = await fetch(variantUrl, { signal });
+        if (!res.ok) {
+            throw new Error(`HTTP ${res.status} for ${variantUrl}`);
+        }
+        const buf = await res.arrayBuffer();
 
-                if (signal.aborted) {
-                    throw new DOMException("Aborted", "AbortError");
-                }
-
-                const face = new FontFace(item.family, buf, { weight, style });
-                return await face.load();
-            })
-        );
-
-        // `face.load()` from an ArrayBuffer is effectively instant,
-        // but still check — the signal may have fired during the microtask hop.
         if (signal.aborted) {
             throw new DOMException("Aborted", "AbortError");
         }
 
-        // Batch inject all loaded variants at once to prevent layout thrashing
-        loadedFaces.forEach(face => {
-            document.fonts.add(face);
-            if (idoc) idoc.fonts.add(face);
-        });
+        const { weight, style } = this.parseVariantDescriptor(variant);
+        const face = new FontFace(item.family, buf, { weight, style });
+        await face.load();
+
+        document.fonts.add(face);
+        if (idoc) idoc.fonts.add(face);
     }
 
-    public isFontLoaded(item: FontItem): boolean {
-        const fontKey = `${item.family}-${item.version}`;
+    public isFontLoaded(item: FontItem, variant: string = "regular"): boolean {
+        const fontKey = `${item.family}-${variant}`;
         const idoc = this.controller.document?.body?.element?.ownerDocument;
         return this.loadedSet.has(fontKey)
             && document.fonts.check(`1em ${item.family}`)
