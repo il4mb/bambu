@@ -4,13 +4,13 @@ import { useStyled } from "@/hooks/useStyled";
 import { Box, CircularProgress, IconButton, Menu, MenuItem, Typography } from "@mui/material";
 import _ from "lodash";
 import { Plus, Image as ImageIcon, Paintbrush, Layers } from "lucide-react";
-// import { createStopColor, parseColor } from "@/libs/color";
 import BackgroundField from "../fields/backgrounds/BackgroundField";
 import { parseBackgrounds, createBackground } from "@/libs/background";
 import { Background } from "@/types/background";
 import { formatUnit } from "@/libs/units";
-import { motion, Reorder } from "motion/react";
+import { Reorder } from "motion/react";
 import { Color } from "@/libs/color";
+import ActionButton from "../ui/ActionButton";
 
 /**
  * Compiles a structured Background array into standard CSS background properties.
@@ -157,9 +157,9 @@ export default function BackgroundProperty() {
             label="Backgrounds"
             defaultExpanded
             actions={
-                <IconButton size="small" onClick={(e) => setAnchorEl(e.currentTarget)}>
-                    <Plus size={16} />
-                </IconButton>
+                <ActionButton onClick={(e) => setAnchorEl(e.currentTarget)}>
+                    <Plus size={14} />
+                </ActionButton>
             }
         >
             {pending && <CircularProgress size={20} sx={{ my: 1, display: "block", mx: "auto" }} />}
@@ -195,6 +195,7 @@ export default function BackgroundProperty() {
                     display: "flex",
                     flexDirection: "column",
                     gap: 2.5,
+                    maxWidth: "240px",
                 }}
             >
                 {backgrounds.map((bg) => (

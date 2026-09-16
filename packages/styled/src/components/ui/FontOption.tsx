@@ -85,7 +85,7 @@ export default function FontOption({ option, ...props }: FontOptionProps) {
                 component="span"
                 sx={{
                     fontFamily: "inherit",
-                    fontSize: 12,
+                    fontSize: 10,
                     whiteSpace: "nowrap",
                     overflow: "hidden",
                     textOverflow: "ellipsis",

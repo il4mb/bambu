@@ -9,7 +9,7 @@ export const SelectField = styled((props: SelectProps<string>) => (
                 paper: {
                     sx: {
                         "& .MuiMenuItem-root": {
-                            fontSize: "12px",
+                            fontSize: "10px",
                             padding: "2px 12px",
                         },
                     },
@@ -21,10 +21,11 @@ export const SelectField = styled((props: SelectProps<string>) => (
     width: "100%",
     minHeight: "none",
     height: "1.55rem",
-    fontSize: "12px",
+    fontSize: "10px",
     border: "none",
+    padding: "0px",
     "& .MuiSelect-select": {
-        padding: "2px 8px",
+        padding: "2px 6px",
     },
     "& .MuiSvgIcon-root": {
         right: "0px",

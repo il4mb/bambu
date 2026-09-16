@@ -1,4 +1,4 @@
-import { Box, Fade, SxProps, Typography } from "@mui/material";
+import { Box, Divider, SxProps, Typography } from "@mui/material";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { ReactNode, useState } from "react";
 import ActionButton from "./ui/ActionButton";
@@ -16,9 +16,17 @@ export default function PropertyGroup({ label, children, defaultExpanded = false
     const [expand, setExpand] = useState(defaultExpanded);
     const toggleExpand = () => setExpand((prev) => !prev);
     return (
-        <Box sx={{ pb: 1 }}>
-            <Box sx={{ flex: 1, display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
-                <Typography sx={{ fontSize: 12, flex: 1, fontWeight: 800 }} component={"span"}>
+        <Box>
+            <Box
+                sx={{
+                    flex: 1,
+                    display: "flex",
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                }}
+            >
+                <Typography sx={{ fontSize: 10, flex: 1, fontWeight: 800 }} component={"span"}>
                     {label}
                 </Typography>
                 <Box sx={{ display: "flex", flexDirection: "row", gap: 0.5, alignItems: "center" }}>
@@ -36,6 +44,7 @@ export default function PropertyGroup({ label, children, defaultExpanded = false
                         exit={{ height: 0, opacity: 0 }}
                     >
                         <Box>{children}</Box>
+                        <Divider sx={{ mt: 1, mb: 1.5 }} />
                     </motion.div>
                 )}
             </AnimatePresence>

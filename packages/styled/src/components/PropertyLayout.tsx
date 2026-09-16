@@ -14,15 +14,21 @@ export default function PropertyLayout({ label, children, sx, itemSx }: Property
                 display: "flex",
                 flexDirection: "row",
                 alignItems: "center",
+                px: 1,
+                py: 0.5,
+                // borderRadius: 1,
+                // backgroundColor: "background.paper",
+                // border: "1px solid",
+                // borderColor: "divider",
                 gap: 1,
                 ...sx,
             }}
         >
-            <Typography sx={{ fontSize: 12, flex: "50%" }}>{label}</Typography>
+            <Typography sx={{ fontSize: 10, flex: "20%" }}>{label}</Typography>
             <Box
                 sx={{
                     flex: 1,
-                    fontSize: 12,
+                    fontSize: 10,
                     display: "flex",
                     flexDirection: "row",
                     alignItems: "center",

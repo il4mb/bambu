@@ -9,6 +9,7 @@ import NumberField from "../fields/NumberField";
 import { useEffect, useRef, useState } from "react";
 import { useStyledManager } from "@/StyledManager";
 import { Spacing, SPACING_EDGE, DEFAULT_SPACING, getIsCompose, parseSpacing } from "@/libs/spacing";
+import ActionButton from "../ui/ActionButton";
 
 export default function MarginProperty() {
     const { target } = useStyledManager();
@@ -91,18 +92,9 @@ export default function MarginProperty() {
         <Fragment>
             <PropertyLayout label="Margin">
                 {!isComposing ? <NumberField value={value?.top} onChange={changeAll} /> : <Box sx={{ flex: 1 }} />}
-                <IconButton
-                    onClick={toggleComposing}
-                    color="primary"
-                    sx={{
-                        padding: "4px",
-                        width: 24,
-                        height: 24,
-                        ml: 1,
-                    }}
-                >
-                    {isComposing ? <SquareDashed size={16} /> : <Square size={16} />}
-                </IconButton>
+                <ActionButton onClick={toggleComposing} color="primary" sx={{ ml: 1 }}>
+                    {isComposing ? <SquareDashed size={14} /> : <Square size={14} />}
+                </ActionButton>
             </PropertyLayout>
 
             {/* FIXED JSX CONDITIONAL RENDER */}
@@ -120,13 +112,6 @@ export default function MarginProperty() {
                         <PropertyLayout
                             key={edge}
                             itemSx={{ justifyContent: "flex-end" }}
-                            sx={{
-                                px: 0.5,
-                                py: 0.25,
-                                border: "1px solid",
-                                borderColor: "divider", // Uses theme divider color for a cleaner look
-                                borderRadius: 1,
-                            }}
                             label={edge.charAt(0).toUpperCase() + edge.slice(1)}
                         >
                             <NumberField value={value?.[edge]} onChange={(v) => changeEdge(edge, v)} />

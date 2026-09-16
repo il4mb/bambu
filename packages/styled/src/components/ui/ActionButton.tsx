@@ -1,6 +1,8 @@
 import { Button, styled } from "@mui/material";
 
-const ActionButton = styled(Button)(({ theme }) => ({
+const ActionButton = styled(Button, {
+    shouldForwardProp: (prop) => prop !== "selected",
+})<{ selected?: boolean }>(({ theme, selected }) => ({
     minWidth: "1.25rem",
     height: "1.25rem",
     padding: 0,
@@ -14,6 +16,15 @@ const ActionButton = styled(Button)(({ theme }) => ({
         backgroundColor: theme.palette.action.hover,
         borderColor: theme.palette.divider,
     },
+    ...(selected && {
+        backgroundColor: theme.palette.primary.main,
+        borderColor: theme.palette.divider,
+        color: theme.palette.primary.contrastText,
+        "&:hover": {
+            backgroundColor: theme.palette.primary.dark,
+            borderColor: theme.palette.divider,
+        },
+    }),
 }));
 
 export default ActionButton;

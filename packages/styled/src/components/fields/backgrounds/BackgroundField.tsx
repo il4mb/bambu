@@ -123,7 +123,6 @@ export default function BackgroundField({ background, onChange }: BackgroundFiel
 
                         <BackgroundPreview background={background} width={45} height={20} />
                     </Box>
-
                     <Box
                         component={motion.div}
                         sx={{ overflow: "hidden" }}

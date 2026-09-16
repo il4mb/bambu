@@ -15,7 +15,7 @@ export default function FontInput({ value, selected, ...params }: FontInputProps
                     ...params.slotProps.htmlInput,
                     style: {
                         fontFamily: value ? `"${value}", sans-serif` : undefined,
-                        fontSize: 12,
+                        fontSize: 10,
                     },
                 },
                 input: {

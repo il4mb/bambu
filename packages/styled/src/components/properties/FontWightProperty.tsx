@@ -16,9 +16,7 @@ const WEIGHT_MAP = {
     black: "900",
 };
 
-const WEIGHT_LABELS_MAP = Object.fromEntries(
-    Object.entries(WEIGHT_MAP).map(([label, value]) => [value, label]),
-);
+const WEIGHT_LABELS_MAP = Object.fromEntries(Object.entries(WEIGHT_MAP).map(([label, value]) => [value, label]));
 
 type FontWeightPropertyProps = {
     variants?: string[];
@@ -45,9 +43,8 @@ export default function FontWeightProperty({
     return (
         <PropertyLayout label="Weight">
             <SelectField value={value || ""} onChange={(e) => setValue(e.target.value)} fullWidth>
-                <MenuItem value={""}>-- Select --</MenuItem>
                 {allVariants.map((val) => (
-                    <MenuItem key={val.value} value={val.value}>
+                    <MenuItem key={val.value} value={val.value} sx={{ fontSize: "10px", fontWeight: val.value }}>
                         {val.label}
                     </MenuItem>
                 ))}

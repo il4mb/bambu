@@ -14,6 +14,7 @@ import WidthProperty from "./components/properties/WidthProperty";
 import HeightProperty from "./components/properties/HeightProperty";
 import FontFamilyProperty from "./components/properties/FontFamilyProperty";
 import FontProperty from "./components/properties/FontProperty";
+import TextAlignProperty from "./components/properties/TextAlignProperty";
 
 type StyledManagerContext = {
     target: Node[];
@@ -54,6 +55,7 @@ export default function StyledManager({}: StyleManagerProps) {
             <Box sx={{ px: 1, display: "flex", flexDirection: "column", gap: 0.5 }}>
                 <DisplayProperty />
                 <FontProperty />
+                <TextAlignProperty />
                 <ColorProperty />
                 <PaddingProperty />
                 <MarginProperty />
