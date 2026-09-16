@@ -63,7 +63,7 @@ export default function ScreenFrame({ children }: ScreenProps) {
         <Box
             ref={viewport.screenRef}
             sx={{
-                borderRadius: 6,
+                borderRadius: '24px',
                 overflow: "visible",
                 border: "8px solid #ccc",
                 

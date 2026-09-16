@@ -12,6 +12,7 @@ import MarginProperty from "./components/properties/MarginProperty";
 import BackgroundProperty from "./components/properties/BackgroundProperty";
 import WidthProperty from "./components/properties/WidthProperty";
 import HeightProperty from "./components/properties/HeightProperty";
+import FontFamilyProperty from "./components/properties/FontFamilyProperty";
 
 type StyledManagerContext = {
     target: Node[];
@@ -49,17 +50,18 @@ export default function StyledManager({}: StyleManagerProps) {
 
     return (
         <Context.Provider value={{ target: nodes }}>
-            <h1>StyleManager</h1>
+           
             <Box sx={{ px: 1, display: "flex", flexDirection: "column", gap: 0.5 }}>
-                {/* <DisplayProperty />
+                <DisplayProperty />
                 <FontSizeProperty />
+                <FontFamilyProperty />
                 <FontWightProperty />
                 <ColorProperty />
                 <PaddingProperty />
-                <MarginProperty /> */}
+                <MarginProperty />
                 <WidthProperty />
-                {/* <HeightProperty /> */}
-                {/* <BackgroundProperty /> */}
+                <HeightProperty />
+                <BackgroundProperty />
             </Box>
         </Context.Provider>
     );

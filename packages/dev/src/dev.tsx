@@ -1,8 +1,13 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
+import Theme from "./theme/Theme";
 
 function IndexComponent() {
-    return <App />;
+    return (
+        <Theme>
+            <App />
+        </Theme>
+    );
 }
 
 const root = createRoot(document.getElementById("root")!);

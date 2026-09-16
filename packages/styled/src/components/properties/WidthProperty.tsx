@@ -1,7 +1,6 @@
-import * as csstree from "css-tree";
 import { useStyled } from "@/hooks/useStyled";
 import PropertyLayout from "../PropertyLayout";
-import { ASTEditor } from "@bambu/ast-editor";
+import { CssEditor } from "@il4mb/css-editor";
 import {
     ABSOLUTE_LENGTH_UNITS,
     MODERN_VIEWPORT_UNITS,
@@ -32,22 +31,26 @@ export default function WidthProperty({}: WidthProps) {
                     return String(curr.data.style?.width);
                 }
                 return prev;
-            }, '');
+            }, "");
         },
         (node, value) => {
-            // node.set("data.style", (prev) => ({
-            //     ...prev,
-            //     width: value.value + value.unit,
-            // }));
+            if (!value) {
+                node.set("data.style", (prev) => {
+                    const { width, ...rest } = prev;
+                    return rest;
+                });
+                return;
+            }
+            node.set("data.style", (prev) => ({
+                ...prev,
+                width: value,
+            }));
         },
     );
 
     return (
         <PropertyLayout label="Width">
-            {/* <NumberField units={UNITS} value={value} onChange={setValue} /> */}
-            {/* {value} */}
-            {/* {csstree.walk(value, (n) => <Typography></Typography>)} */}
-            <div style={{ width: 100, height: 100 }}>{value && <ASTEditor code={'cacl(100px - 50px)'} context="value" />}</div>
+            <div>{value && <CssEditor content={value} onChange={setValue} />}</div>
         </PropertyLayout>
     );
 }

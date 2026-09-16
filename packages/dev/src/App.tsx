@@ -33,8 +33,8 @@ export default function App({}: AppProps) {
                 data: {
                     style: {
                         padding: "40px",
-                        height: '300px',
-                        width: 'max(100px, 100vw)',
+                        height: "300px",
+                        width: "max(100px, 100vw)",
                         backgroundImage:
                             "linear-gradient(to right, #ff000046, #001faa4b), url(https://cdn.pixabay.com/photo/2025/09/18/17/32/woman-9841606_1280.jpg)",
                         backgroundColor: "#ff0ff0",
@@ -86,11 +86,24 @@ export default function App({}: AppProps) {
         [],
     );
 
+    const fontsApi = useMemo(
+        () => ({
+            fetch: async (params: URLSearchParams) => {
+                const response = await fetch(`/api/webfonts${params ? `?${params.toString()}` : ""}`);
+                if (!response.ok) {
+                    throw new Error("Failed to fetch fonts");
+                }
+                return response.json();
+            },
+        }),
+        [],
+    );
+
     return (
         <ContainerProvider register={new Register()} initialValue={initialValue}>
             <ViewportProvider>
                 <GestureProvider>
-                    <StyledProvider>
+                    <StyledProvider fontsApi={fontsApi}>
                         <div>
                             <DeviceSwitch />
                         </div>

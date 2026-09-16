@@ -1,15 +1,23 @@
 {
     "name": "@bambu/dev",
     "scripts": {
-        "dev": "bun --watch ./src/index.html"
+        "dev": "bun --watch ./src/index.html",
+        "dev2": "bun --hot index.ts"
     },
     "dependencies": {
+        "@bambu/node": "workspace:*",
+        "@bambu/react": "workspace:*",
+        "@bambu/styled": "workspace:*",
+        "@mui/material": "^9.4.0",
         "@types/react": "^19.2.18",
         "@types/react-dom": "^19.2.5",
+        "lucide-react": "^1.46.0",
+        "notistack": "^3.0.2",
         "react": "^19.2.8",
         "react-dom": "^19.2.8",
-        "@bambu/node": "workspace:*",
-        "@bambu/styled": "workspace:*",
-        "@bambu/react": "workspace:*"
+        "scss": "^0.2.4"
+    },
+    "devDependencies": {
+        "@types/bun": "^1.4.2"
     }
 }

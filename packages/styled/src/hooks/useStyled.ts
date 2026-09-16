@@ -109,3 +109,5 @@ export const useProperty = function <T = string>(property: keyof CSSProperties, 
 
     return styled;
 };
+
+

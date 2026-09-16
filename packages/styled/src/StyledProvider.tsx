@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext, useMemo } from "react";
+import { createContext, ReactNode, useContext, useEffect, useMemo } from "react";
 import { StyledController } from "./StyledController";
 import { useContainer } from "@bambu/react";
 
@@ -9,12 +9,22 @@ export const useStyleController = () => {
     return ctx;
 };
 
+type Api = {
+    fetch: (params: URLSearchParams) => Promise<any>;
+};
 type StyledProviderProps = {
     children?: ReactNode;
+    fontsApi?: Api;
 };
 
-export default function StyledProvider({ children }: StyledProviderProps) {
+export default function StyledProvider({ children, fontsApi }: StyledProviderProps) {
     const container = useContainer();
     const controller = useMemo(() => new StyledController(container), []);
+
+    useEffect(() => {
+        if (!fontsApi) return;
+        return controller.setFontsApi(fontsApi);
+    }, [fontsApi]);
+
     return <Context.Provider value={controller}>{children}</Context.Provider>;
 }

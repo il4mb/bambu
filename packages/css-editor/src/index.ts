@@ -1,3 +1,1 @@
-import "./global";
-
-export { default as ASTEditor } from "./ASTEditor";
+export { default as CssEditor } from "./CssEditor";

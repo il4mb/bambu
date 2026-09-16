@@ -8,14 +8,11 @@ import TokenRender from "./components/TokenRender";
 
 const Container = styled("div")({
     position: "relative",
-    fontSize: 12,
+    fontSize: 10,
     padding: 4,
     boxSizing: "border-box",
     width: "100%",
     height: "100%",
-    minHeight: "2em",
-    backgroundColor: "#1e1e1e",
-    color: "#fff",
     fontFamily: "monospace",
 });
 const EditorContainer = styled("div")({
@@ -25,7 +22,6 @@ const EditorContainer = styled("div")({
     fontFamily: "monospace",
     width: "100%",
     height: "100%",
-    minHeight: "2em",
 });
 
 type ASTEditorProps = {

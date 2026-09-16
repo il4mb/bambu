@@ -1,5 +1,5 @@
 {
-    "name": "@iil4mb/css-editor",
+    "name": "@il4mb/css-editor",
     "module": "index.ts",
     "type": "module",
     "scripts": {

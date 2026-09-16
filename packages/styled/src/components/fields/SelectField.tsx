@@ -10,7 +10,7 @@ export const SelectField = styled((props: SelectProps<string>) => (
                     sx: {
                         "& .MuiMenuItem-root": {
                             fontSize: "12px",
-                            padding: '2px 12px'
+                            padding: "2px 12px",
                         },
                     },
                 },
@@ -18,11 +18,11 @@ export const SelectField = styled((props: SelectProps<string>) => (
         }}
     />
 ))({
-    // Applied directly to the input box trigger
     width: "100%",
     minHeight: "none",
-    // height: "1.55rem",
+    height: "1.55rem",
     fontSize: "12px",
+    border: "none",
     "& .MuiSelect-select": {
         padding: "2px 8px",
     },

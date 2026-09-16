@@ -6,7 +6,8 @@
     ],
     "scripts": {
         "dev": "bun --watch --filter @bambu/dev dev",
-        "dev2": "bun --env-file=./packages/dev/.env ./packages/dev/src/index.html"
+        "dev2": "bun --env-file=./packages/dev/.env ./packages/dev/src/index.html",
+        "dev3": "bun --hot --env-file=./packages/dev/.env ./packages/dev/index.ts"
     },
     "dependencies": {
         "chroma-js": "^3.2.0",

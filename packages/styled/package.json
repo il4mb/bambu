@@ -7,7 +7,7 @@
     },
     "peerDependencies": {
         "@bambu/node": "workspace:*",
-        "@bambu/ast-editor": "workspace:*",
+        "@il4mb/css-editor": "workspace:*",
         "@bambu/react": "workspace:*",
         "@emotion/react": "^11.14.0",
         "@emotion/styled": "^11.14.1",

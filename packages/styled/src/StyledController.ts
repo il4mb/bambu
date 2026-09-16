@@ -1,21 +1,41 @@
 import { parseString, ColorType, transform, TransformOptions } from "@tbela99/css-parser/web";
-import { Container, Node } from '@bambu/node';
+import { Container, EventEmitter, Node } from '@bambu/node';
 import { CSSProperties } from "react";
+import { WebfontsController } from "./WebfontsController";
 
 type Selector = {
     selector: string;
     css: any
 }
 
-export class StyledController {
+type Events = {
+    webfonts: (controller: WebfontsController) => void;
+    "unregister:webfonts": () => void;
+}
+export class StyledController extends EventEmitter<Events> {
 
     protected collector: Map<string, Selector> = new Map();
     protected element: HTMLStyleElement | null = null;
+    protected webfontsController: WebfontsController | null = null;
 
-    constructor(protected document: Container) {
+    constructor(public document: Container) {
+        super();
         document.on("change:data.style", () => this.render());
         document.on("change:element", () => this.render());
         this.render();
+    }
+
+    get webfonts() {
+        return this.webfontsController;
+    }
+
+    setFontsApi(fontsApi: Api) {
+        this.webfontsController = new WebfontsController(fontsApi, this);
+        this.emit("webfonts", this.webfontsController);
+        return () => {
+            this.webfontsController = null;
+            this.emit("unregister:webfonts");
+        }
     }
 
     getElement() {
@@ -44,7 +64,7 @@ export class StyledController {
             }
         });
 
-        let cssCode = "* { padding: 0; margin: 0; box-sizing: border-box; }\n";
+        let cssCode = "* { padding: 0; margin: 0; box-sizing: border-box; font-family: system-ui; }\n";
         for (const [key, css] of collector) {
             cssCode += `.${key} {`;
             for (const property of Object.keys(css)) {
@@ -55,7 +75,6 @@ export class StyledController {
         }
 
         element.innerHTML = cssCode;
-        // this.minimize(cssCode);
     }
 
 
@@ -84,5 +103,15 @@ export class StyledController {
             // n.trigger();
         })
         // this.render();
+    }
+
+
+    on<K extends keyof Events>(event: K, callback: Events[K]) {
+        const registration = super.on(event, callback);
+        if (event === "webfonts" && this.webfontsController) {
+            callback(this.webfontsController);
+        }
+
+        return registration;
     }
 }
