@@ -15,6 +15,7 @@ const registry = new Registry([
 const tokenizer = new Tokenizer(registry);
 
 type EditorState = {
+    colors?: ColorOptions;
     content: string;
     setContent: Dispatch<SetStateAction<string>>;
     stack: IToken[];
@@ -35,12 +36,15 @@ type EditorProviderProps = {
     content: string;
     children?: React.ReactNode;
     onChange?: (content: string) => void;
+    colors?: ColorOptions;
 };
 
-export default function EditorProvider({ content: initialContent, children, onChange }: EditorProviderProps) {
+export default function EditorProvider({ content: initialContent, children, onChange, colors }: EditorProviderProps) {
     const [stack, setStack] = useState<IToken[]>([]);
     const [content, setContent] = useState(initialContent);
     const tokensRef = useLatest(stack);
+    const onChangeRef = useLatest(onChange);
+    const localChangedRef = useLatest(false);
 
     const generateTokens = useCallback((content: string) => {
         const tokenList = tokenizer.tokenize(content ? content : "");
@@ -48,21 +52,30 @@ export default function EditorProvider({ content: initialContent, children, onCh
         setStack(tokenList);
     }, []);
 
-    const handleContentChange = useCallback(
-        (newContent: string) => {
-            setContent(newContent);
-            onChange?.(newContent);
-        },
-        [onChange],
-    );
+    const handleContentChange = (newContent: string) => {
+        localChangedRef.current = true;
+        setContent(newContent);
+        onChangeRef.current?.(newContent);
+    };
 
     useEffect(() => {
         generateTokens(content);
     }, [generateTokens]);
 
+    useEffect(() => {
+        if (localChangedRef.current) {
+            localChangedRef.current = false;
+            return;
+        }
+        if (initialContent !== content) {
+            setContent(initialContent);
+            generateTokens(initialContent);
+        }
+    }, [initialContent, content, generateTokens]);
+
     const values = useMemo(
-        () => ({ content, setContent: handleContentChange, stack, generateTokens, setStack }),
-        [content, handleContentChange, stack, generateTokens, setStack],
+        () => ({ content, stack, colors, setContent: handleContentChange, generateTokens, setStack }),
+        [content, stack, colors, generateTokens, setStack],
     );
 
     return <Context.Provider value={values}>{children}</Context.Provider>;

@@ -5,16 +5,19 @@ import Menu from "@/components/ui/Menu";
 import ListItem from "@/components/ui/ListItem";
 import { Unit } from "@/utils/unit";
 import List from "@/components/ui/List";
+import { useEditorContext } from "@/contexts/EditorProvider";
 
-const Indicator = styled(ChevronDown)({
+const Indicator = styled(ChevronDown, {
+    shouldForwardProp: (prop) => prop !== "colors",
+})<{ colors: { background?: string; color?: string } }>(({ colors }) => ({
     position: "absolute",
     top: "-5px",
     left: "108%",
-    background: "#ffffff5c",
-    color: "#fff",
+    background: colors?.background || "#d1d1d19a",
+    color: colors?.color || "#555555",
     borderRadius: "2px",
     height: "10px",
-});
+}));
 
 const TextArea = styled.span({
     position: "relative",
@@ -26,7 +29,7 @@ type UnitFieldProps = {
 };
 
 export default function UnitField({ value, onChange }: UnitFieldProps) {
-    
+    const { colors } = useEditorContext();
     const spanRef = useRef<HTMLSpanElement>(null);
     const [hover, setHover] = useState(false);
     const [open, setOpen] = useState(false);
@@ -69,14 +72,15 @@ export default function UnitField({ value, onChange }: UnitFieldProps) {
         <Fragment>
             <TextArea ref={spanRef} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
                 {value}
-                {hover && <Indicator size={12} onClick={() => setOpen(true)} />}
+                {hover && <Indicator colors={colors?.indicator} size={12} onClick={() => setOpen(true)} />}
             </TextArea>
 
             <Menu
                 anchorEl={spanRef.current}
                 anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
                 open={open}
-                onClose={() => setOpen(false)}>
+                onClose={() => setOpen(false)}
+            >
                 <List>
                     {Unit.ALL.map((item) => {
                         const active = item === value;
@@ -85,7 +89,8 @@ export default function UnitField({ value, onChange }: UnitFieldProps) {
                                 ref={active ? activeItemRef : null}
                                 key={item}
                                 active={active}
-                                onClick={() => handleChange(item)}>
+                                onClick={() => handleChange(item)}
+                            >
                                 {item}
                             </ListItem>
                         );

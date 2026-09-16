@@ -1,15 +1,15 @@
 import { useStyled } from "@/hooks/useStyled";
 import PropertyLayout from "../PropertyLayout";
 import { formatUnit, parseUnit, UnitObject } from "@/libs/units";
-import _ from "lodash";
+import isEqual from "lodash/isEqual";
 import { Fragment } from "react/jsx-runtime";
-import { Box, IconButton } from "@mui/material";
+import { Box } from "@mui/material";
 import { Square, SquareDashed } from "lucide-react";
-import NumberField from "../fields/NumberField";
 import { useEffect, useRef, useState } from "react";
 import { useStyledManager } from "@/StyledManager";
 import { Spacing, SPACING_EDGE, DEFAULT_SPACING, getIsCompose, parseSpacing } from "@/libs/spacing";
 import ActionButton from "../ui/ActionButton";
+import { CssEditor } from "@il4mb/css-editor";
 
 export default function MarginProperty() {
     const { target } = useStyledManager();
@@ -22,7 +22,7 @@ export default function MarginProperty() {
 
             const firstValue = parseSpacing(nodeArray[0].data.style || {}, "margin");
             const allMatch = nodeArray.every((node) =>
-                _.isEqual(parseSpacing(node.data.style || {}, "margin"), firstValue),
+                isEqual(parseSpacing(node.data.style || {}, "margin"), firstValue),
             );
 
             // parseSpacing always returns an object, so firstValue is never truly falsy.
@@ -34,7 +34,7 @@ export default function MarginProperty() {
             // Fallback logic for computed values if styles differ
             const computedValue = parseSpacing(nodeArray[0].state.computed || {}, "margin");
             const allComputedMatch = nodeArray.every((node) =>
-                _.isEqual(parseSpacing(node.state.computed || {}, "margin"), computedValue),
+                isEqual(parseSpacing(node.state.computed || {}, "margin"), computedValue),
             );
 
             if (allComputedMatch) {
@@ -51,7 +51,7 @@ export default function MarginProperty() {
                 const builded = Object.fromEntries(
                     SPACING_EDGE.map((edge) => {
                         const camelCaseEdge = edge.charAt(0).toUpperCase() + edge.slice(1);
-                        return [`margin${camelCaseEdge}`, formatUnit({ value: 0, ...(value?.[edge] || {}) })];
+                        return [`margin${camelCaseEdge}`, value[edge] || DEFAULT_SPACING[edge]];
                     }),
                 );
 
@@ -65,13 +65,13 @@ export default function MarginProperty() {
 
     const [isComposing, setIsComposing] = useState(false);
 
-    const changeAll = (val: UnitObject) => {
-        setValue(Object.fromEntries(SPACING_EDGE.map((edge) => [edge, { value: 0, unit: "px", ...val }])) as Spacing);
+    const changeAll = (val: string) => {
+        setValue(Object.fromEntries(SPACING_EDGE.map((edge) => [edge, val])) as Spacing);
     };
-    const changeEdge = (key: keyof Spacing, val: UnitObject) => {
+    const changeEdge = (key: keyof Spacing, val: string) => {
         setValue((prev) => ({
             ...(prev || DEFAULT_SPACING),
-            [key]: { value: 0, unit: "px", ...val },
+            [key]: val,
         }));
     };
     const toggleComposing = () => setIsComposing((prev) => !prev);
@@ -91,7 +91,14 @@ export default function MarginProperty() {
     return (
         <Fragment>
             <PropertyLayout label="Margin">
-                {!isComposing ? <NumberField value={value?.top} onChange={changeAll} /> : <Box sx={{ flex: 1 }} />}
+                {!isComposing ? (
+                    <CssEditor
+                        content={value?.top || ""}
+                        onChange={(v) => changeAll(v)}
+                    />
+                ) : (
+                    <Box sx={{ flex: 1 }} />
+                )}
                 <ActionButton onClick={toggleComposing} color="primary" sx={{ ml: 1 }}>
                     {isComposing ? <SquareDashed size={14} /> : <Square size={14} />}
                 </ActionButton>
@@ -103,7 +110,7 @@ export default function MarginProperty() {
                     sx={{
                         display: "grid",
                         gridTemplateColumns: "1fr 1fr", // Creates a perfect 2x2 grid
-                        gap: 1,
+                        gap: .5,
                         padding: "4px 12px",
                     }}
                 >
@@ -114,7 +121,7 @@ export default function MarginProperty() {
                             itemSx={{ justifyContent: "flex-end" }}
                             label={edge.charAt(0).toUpperCase() + edge.slice(1)}
                         >
-                            <NumberField value={value?.[edge]} onChange={(v) => changeEdge(edge, v)} />
+                            <CssEditor content={value?.[edge] || ""} onChange={(v) => changeEdge(edge, v)} />
                         </PropertyLayout>
                     ))}
                 </Box>

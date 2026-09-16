@@ -7,7 +7,7 @@ export interface FontPropertyProps {}
 export default function FontProperty({}: FontPropertyProps) {
     return (
         <PropertyGroup label="Font" defaultExpanded>
-            <Stack direction="column">
+            <Stack direction="column" sx={{ gap: 0.5 }}>
                 <FontSizeProperty />
                 <FontFamilyProperty />
             </Stack>

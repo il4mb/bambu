@@ -14,13 +14,8 @@ export default function PropertyLayout({ label, children, sx, itemSx }: Property
                 display: "flex",
                 flexDirection: "row",
                 alignItems: "center",
-                px: 1,
-                py: 0.5,
-                // borderRadius: 1,
-                // backgroundColor: "background.paper",
-                // border: "1px solid",
-                // borderColor: "divider",
                 gap: 1,
+                overflow: "visible",
                 ...sx,
             }}
         >
@@ -34,6 +29,7 @@ export default function PropertyLayout({ label, children, sx, itemSx }: Property
                     alignItems: "center",
                     justifyContent: "space-between",
                     flexBasis: "100px",
+                    overflow: "visible",
                     ...itemSx,
                 }}
             >

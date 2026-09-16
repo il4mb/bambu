@@ -10,6 +10,7 @@ import { useStyledManager } from "@/StyledManager";
 import { Spacing, parseSpacing, SPACING_EDGE, DEFAULT_SPACING, getIsCompose } from "@/libs/spacing";
 import _ from "lodash";
 import ActionButton from "../ui/ActionButton";
+import { CssEditor } from "@il4mb/css-editor";
 
 export default function PaddingProperty() {
     const { target } = useStyledManager();
@@ -51,7 +52,7 @@ export default function PaddingProperty() {
                 const builded = Object.fromEntries(
                     SPACING_EDGE.map((edge) => {
                         const camelCaseEdge = edge.charAt(0).toUpperCase() + edge.slice(1);
-                        return [`padding${camelCaseEdge}`, formatUnit({ value: 0, ...(value?.[edge] || {}) })];
+                        return [`padding${camelCaseEdge}`, value[edge] || DEFAULT_SPACING[edge]];
                     }),
                 );
 
@@ -65,13 +66,13 @@ export default function PaddingProperty() {
 
     const [isComposing, setIsComposing] = useState(false);
 
-    const changeAll = (val: UnitObject) => {
-        setValue(Object.fromEntries(SPACING_EDGE.map((edge) => [edge, { value: 0, unit: "px", ...val }])) as Spacing);
+    const changeAll = (val: string) => {
+        setValue(Object.fromEntries(SPACING_EDGE.map((edge) => [edge, val])) as Spacing);
     };
-    const changeEdge = (key: keyof Spacing, val: UnitObject) => {
+    const changeEdge = (key: keyof Spacing, val: string) => {
         setValue((prev) => ({
             ...(prev || DEFAULT_SPACING),
-            [key]: { value: 0, unit: "px", ...val },
+            [key]: val,
         }));
     };
     const toggleComposing = () => setIsComposing((prev) => !prev);
@@ -91,7 +92,11 @@ export default function PaddingProperty() {
     return (
         <Fragment>
             <PropertyLayout label="Padding">
-                {!isComposing ? <NumberField value={value?.top} onChange={changeAll} /> : <Box sx={{ flex: 1 }} />}
+                {!isComposing ? (
+                    <CssEditor content={value?.top || ""} onChange={(v) => changeAll(v)} />
+                ) : (
+                    <Box sx={{ flex: 1 }} />
+                )}
                 <ActionButton onClick={toggleComposing} color="primary" sx={{ ml: 1 }}>
                     {isComposing ? <SquareDashed size={14} /> : <Square size={14} />}
                 </ActionButton>
@@ -101,7 +106,7 @@ export default function PaddingProperty() {
                     sx={{
                         display: "grid",
                         gridTemplateColumns: "1fr 1fr", // Creates a perfect 2x2 grid
-                        gap: 1,
+                        gap: 0.5,
                         padding: "4px 12px",
                     }}
                 >
@@ -111,7 +116,7 @@ export default function PaddingProperty() {
                             itemSx={{ justifyContent: "flex-end" }}
                             label={edge.charAt(0).toUpperCase() + edge.slice(1)}
                         >
-                            <NumberField value={value?.[edge]} onChange={(v) => changeEdge(edge, v)} />
+                            <CssEditor content={value?.[edge] || ""} onChange={(v) => changeEdge(edge, v)} />
                         </PropertyLayout>
                     ))}
                 </Box>

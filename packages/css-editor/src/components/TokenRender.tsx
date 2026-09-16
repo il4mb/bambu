@@ -1,7 +1,7 @@
 import { useEditorContext } from "@/contexts/EditorProvider";
 import { Fragment, useMemo } from "react";
 import TokenNode from "./TokenNode";
-import { getChildren, getDescendants, getRoots } from "@/utils/tokens";
+import { getDescendants, getRoots } from "@/utils/tokens";
 
 export default function TokenRender() {
     const { stack } = useEditorContext();

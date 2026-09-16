@@ -1,54 +1,40 @@
 import { useStyled } from "@/hooks/useStyled";
 import PropertyLayout from "../PropertyLayout";
-import NumberField from "../fields/NumberField";
-import {
-    ABSOLUTE_LENGTH_UNITS,
-    MODERN_VIEWPORT_UNITS,
-    parseUnit,
-    RELATIVE_LENGTH_UNITS,
-    TYPOGRAPHY_UNITS,
-    UnitObject,
-    VIEWPORT_UNITS,
-} from "@/libs/units";
-
-const UNITS = Array.from(
-    new Map(
-        [
-            ...ABSOLUTE_LENGTH_UNITS,
-            ...RELATIVE_LENGTH_UNITS,
-            ...VIEWPORT_UNITS,
-            ...MODERN_VIEWPORT_UNITS,
-            ...TYPOGRAPHY_UNITS,
-        ].map((u) => [u, u]),
-    ).values(),
-);
+import { CssEditor } from "@il4mb/css-editor";
 
 type HeightProps = {};
 
 export default function HeightProperty({}: HeightProps) {
-    const [value, setValue] = useStyled<UnitObject>(
+    const [value, setValue] = useStyled<string>(
         (nodes) => {
-            return Array.from(nodes).reduce(
-                (prev, curr) => {
-                    try {
-                        return parseUnit(String(curr.data.style?.height || curr.state.computed?.height), "px");
-                    } catch (err) {}
-                    return prev;
-                },
-                { value: 12, unit: "px" } as UnitObject,
-            );
+            const all = Array.from(nodes)
+                .map((n) => n.data.style?.height ? String(n.data.style?.height) : null)
+                .filter(Boolean);
+            if (all.length === 0) return "initial";
+            const first = all[0];
+            if (all.every((f) => f === first)) {
+                return first;
+            }
+            return "initial";
         },
         (node, value) => {
+            if (!value || value === "initial") {
+                node.set("data.style", (prev) => {
+                    const { height, ...rest } = prev;
+                    return rest;
+                });
+                return;
+            }
             node.set("data.style", (prev) => ({
                 ...prev,
-                height: value.value + value.unit,
+                height: value,
             }));
         },
     );
 
     return (
         <PropertyLayout label="Height">
-            <NumberField units={UNITS} value={value} onChange={setValue} />
+            <CssEditor content={value || ""} onChange={setValue} />
         </PropertyLayout>
     );
 }

@@ -1,20 +1,18 @@
-import _ from "lodash";
-import { UnitObject, parseUnit } from "./units";
+import isEqual from "lodash/isEqual";
 
 export const SPACING_EDGE = ["top", "right", "bottom", "left"] as const;
 
 export type Edge = (typeof SPACING_EDGE)[number];
-export type Spacing = Record<Edge, UnitObject>;
+export type Spacing = Record<Edge, string>;
 
 export const parseSpacing = (container: Record<string, any>, key: string): Spacing => {
-    const spacing = Object.fromEntries(SPACING_EDGE.map((edge) => [edge, { value: 0, unit: "px" }])) as Spacing;
+    const spacing = Object.fromEntries(SPACING_EDGE.map((edge) => [edge, '0px'])) as Spacing;
 
     const shorthand = container[key];
     if (shorthand !== undefined && shorthand !== null) {
         const parts = String(shorthand)
             .trim()
-            .split(/\s+/)
-            .map((v) => parseUnit(v, "px"));
+            .split(/\s+/);
 
         if (parts.length === 1) {
             spacing.top = spacing.right = spacing.bottom = spacing.left = parts[0];
@@ -41,7 +39,7 @@ export const parseSpacing = (container: Record<string, any>, key: string): Spaci
         const edgeValue = container[camelKey] !== undefined ? container[camelKey] : container[kebabKey];
 
         if (edgeValue !== undefined && edgeValue !== null) {
-            spacing[edge] = parseUnit(String(edgeValue), "px");
+            spacing[edge] = String(edgeValue);
         }
     });
 
@@ -51,12 +49,12 @@ export const parseSpacing = (container: Record<string, any>, key: string): Spaci
 export const getIsCompose = (spacing: Spacing) => {
     const array = Object.values(spacing || {});
     if (!array.length) return;
-    return array.some((v) => !_.isEqual(v || {}, array[0] || {}));
+    return array.some((v) => !isEqual(v || {}, array[0] || {}));
 };
 
 export const DEFAULT_SPACING: Spacing = {
-    top: { value: 0, unit: "px" },
-    right: { value: 0, unit: "px" },
-    bottom: { value: 0, unit: "px" },
-    left: { value: 0, unit: "px" },
+    top: '0px',
+    right: '0px',
+    bottom: '0px',
+    left: '0px',
 };

@@ -26,6 +26,13 @@ declare global {
         unit?: string;
         children?: TokenPlain[]
     }
+
+    export type ColorOptions = {
+        indicator?: {
+            background?: string;
+            color?: string;
+        };
+    }
 }
 
 export { };
