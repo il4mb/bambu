@@ -115,7 +115,7 @@ export default function FontFamilyProperty() {
                     sx={{
                         width: "100%",
                         "& .MuiInputBase-root": {
-                            height: "1.75em",
+                            height: "1.4em",
                             padding: "0px 2px",
                             paddingRight: "2px !important",
                         },

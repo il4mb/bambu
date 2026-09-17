@@ -20,7 +20,7 @@ export const SelectField = styled((props: SelectProps<string>) => (
 ))({
     width: "100%",
     minHeight: "none",
-    height: "1.55rem",
+    height: "1.2rem",
     fontSize: "10px",
     border: "none",
     padding: "0px",

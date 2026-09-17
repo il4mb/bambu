@@ -1,4 +1,4 @@
-import { useProperty, useStyled } from "@/hooks/useStyled";
+import { useProperty } from "@/hooks/useStyled";
 import PropertyLayout from "../PropertyLayout";
 import { MenuItem } from "@mui/material";
 import { SelectField } from "@/components/fields/SelectField";
@@ -24,7 +24,7 @@ const DISPLAY_VALUES = [
 ];
 
 export default function DisplayProperty() {
-    const [value, setValue] = useProperty("display");
+    const [value, setValue] = useProperty("display", '');
 
     return (
         <PropertyLayout label="Display">

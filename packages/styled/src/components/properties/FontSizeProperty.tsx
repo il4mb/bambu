@@ -1,34 +1,38 @@
 import { useStyled } from "@/hooks/useStyled";
 import PropertyLayout from "../PropertyLayout";
-import NumberField from "../fields/NumberField";
-import { parseUnit, TYPOGRAPHY_UNITS, UnitObject } from "@/libs/units";
+import { CssEditor } from "@il4mb/css-editor";
 
 type FontSizeProps = {};
 
 export default function FontSizeProperty({}: FontSizeProps) {
-    const [value, setValue] = useStyled<UnitObject>(
+    const [value, setValue] = useStyled<string>(
         (nodes) => {
-            return Array.from(nodes).reduce(
-                (prev, curr) => {
-                    try {
-                        return parseUnit(String(curr.data.style?.fontSize || curr.state.computed?.fontSize), "px");
-                    } catch (err) {}
-                    return prev;
-                },
-                { value: 12, unit: "px" } as UnitObject,
-            );
+            const allValues = nodes.map((node) => node.data.style?.fontSize).filter(Boolean) as string[];
+            const firstValue = allValues[0];
+            if (firstValue && allValues.every((v) => v === firstValue)) {
+                return firstValue;
+            }
+
+            const allComputedValues = nodes.map((node) => node.state.computed?.fontSize).filter(Boolean) as string[];
+            const firstComputedValue = allComputedValues[0];
+            if (firstComputedValue && allComputedValues.every((v) => v === firstComputedValue)) {
+                return firstComputedValue;
+            }
+            return undefined;
         },
         (node, value) => {
-            node.set("data.style", (prev) => ({
-                ...prev,
-                fontSize: value.value + value.unit,
-            }));
+            if (value === undefined) {
+                const { fontSize, ...rest } = node.data.style || {};
+                node.set("data.style", { ...rest });
+                return;
+            }
+            node.set("data.style.fontSize", value);
         },
     );
 
     return (
         <PropertyLayout label="Size">
-            <NumberField units={TYPOGRAPHY_UNITS} value={value} onChange={setValue} />
+            <CssEditor content={value || ""} onChange={setValue} />
         </PropertyLayout>
     );
 }
