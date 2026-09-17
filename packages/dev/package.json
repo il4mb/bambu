@@ -8,6 +8,7 @@
         "@bambu/node": "workspace:*",
         "@bambu/react": "workspace:*",
         "@bambu/styled": "workspace:*",
+        "@bambu/binder": "workspace:*",
         "@mui/material": "^9.4.0",
         "@types/react": "^19.2.18",
         "@types/react-dom": "^19.2.5",

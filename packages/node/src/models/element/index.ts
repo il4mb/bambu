@@ -1,5 +1,6 @@
 import { defineModel } from "../helper";
 import { DefineModel } from "../../types/define";
+import { createElement } from "react";
 
 declare global {
     interface ModelRegistry {
@@ -16,6 +17,9 @@ declare global {
 
 export default defineModel({
     name: "element",
+    // component: ({ ref, node, children, ...rest }) => {
+    //    return createElement(node.tagName || "div", { ...rest, key: node.id }, children);
+    // },
     actions: {
         "select-parent": {
             title: "select parent"

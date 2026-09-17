@@ -10,6 +10,7 @@ import {
     HilightSpot,
 } from "@bambu/react";
 import { StyledManager, StyledProvider } from "@bambu/styled";
+import { BinderProvider, VarsManager } from "@bambu/binder";
 import { useMemo } from "react";
 
 type AppProps = {};
@@ -92,7 +93,7 @@ export default function App({}: AppProps) {
                         color: "white",
                     },
                 },
-            }
+            },
         ],
         [],
     );
@@ -114,24 +115,27 @@ export default function App({}: AppProps) {
         <ContainerProvider register={new Register()} initialValue={initialValue}>
             <ViewportProvider>
                 <GestureProvider>
-                    <StyledProvider fontsApi={fontsApi}>
-                        <div>
-                            <DeviceSwitch />
-                        </div>
-                        <div style={{ display: "flex", flex: 1 }}>
-                            <div style={{ flex: 1, position: "relative" }}>
-                                <Screen>
-                                    <Canvas />
-                                    <SpotsContainer>
-                                        <HilightSpot />
-                                    </SpotsContainer>
-                                </Screen>
+                    <BinderProvider>
+                        <StyledProvider fontsApi={fontsApi}>
+                            <div>
+                                <DeviceSwitch />
                             </div>
-                            <div style={{ flexBasis: 260 }}>
-                                <StyledManager />
+                            <div style={{ display: "flex", flex: 1 }}>
+                                <div style={{ flex: 1, position: "relative" }}>
+                                    <Screen>
+                                        <Canvas />
+                                        <SpotsContainer>
+                                            <HilightSpot />
+                                        </SpotsContainer>
+                                    </Screen>
+                                </div>
+                                <div style={{ flexBasis: 260 }}>
+                                    <StyledManager />
+                                    <VarsManager />
+                                </div>
                             </div>
-                        </div>
-                    </StyledProvider>
+                        </StyledProvider>
+                    </BinderProvider>
                 </GestureProvider>
             </ViewportProvider>
         </ContainerProvider>

@@ -1,5 +1,5 @@
 {
-    "name": "@bambu/variabled",
+    "name": "@bambu/styled",
     "module": "index.ts",
     "type": "module",
     "exports": {

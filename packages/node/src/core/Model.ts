@@ -149,7 +149,7 @@ export default class Model<T extends ModuleName = ModuleName> {
      * - **ID:** Generator privat yang menyusuri rantai pewarisan model serta memproteksi dari dependensi sirkular.
      * - **EN:** Private generator walking up the model inheritance chain while guarding against circular dependencies.
      */
-    private *getLineage(): IterableIterator<Model> {
+    public *getLineage(): IterableIterator<Model> {
         let current: Model | null = this as unknown as Model;
         const visited = new Set<string>();
 
@@ -174,7 +174,7 @@ export default class Model<T extends ModuleName = ModuleName> {
      * - **ID:** Helper privat untuk mengambil nilai properti pertama yang valid (non-undefined) sepanjang alur pewarisan.
      * - **EN:** Private helper resolving the first defined property value along the model inheritance chain.
      */
-    private resolve<TValue>(resolver: (model: Model) => TValue | undefined): TValue | undefined {
+    public resolve<TValue>(resolver: (model: Model) => TValue | undefined): TValue | undefined {
         for (const model of this.getLineage()) {
             const value = resolver(model);
             if (value !== undefined) return value;
