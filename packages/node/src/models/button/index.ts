@@ -4,7 +4,7 @@ import { DefineModel } from "../../types/define";
 declare global {
     interface ModelRegistry {
         button: DefineModel<{
-            extends: "element",
+            extends: "text",
             commands: {
                 "click": () => void
             }
@@ -14,7 +14,13 @@ declare global {
 
 export default defineModel<'button'>({
     name: "button",
-    extends: "element",
+    extends: "text",
+    default: {
+        tagName: "button",
+        data: {
+            text: "Button"
+        }
+    },
     commands: {
         "click": () => { }
     }

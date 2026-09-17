@@ -43,7 +43,7 @@ export default class Node<T extends ModuleName = ModuleName> extends EventEmitte
             ...this.model.default,
             ...rw,
             data: {
-                ...this.model.default.data,
+                ...this.model.default?.data,
                 ...rw.data
             }
         };

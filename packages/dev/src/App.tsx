@@ -82,6 +82,17 @@ export default function App({}: AppProps) {
                     },
                 ],
             },
+            {
+                id: "444",
+                type: "button",
+                data: {
+                    style: {
+                        padding: "10px",
+                        backgroundColor: "green",
+                        color: "white",
+                    },
+                },
+            }
         ],
         [],
     );
