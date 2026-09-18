@@ -26,5 +26,8 @@
         "typescript": "7.0.2",
         "@types/lodash": "^4.17.25",
         "@types/react-dom": "^19.2.5"
+    },
+    "dependencies": {
+        "@tbela99/css-parser": "^1.6.3"
     }
 }

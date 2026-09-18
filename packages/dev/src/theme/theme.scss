@@ -1,7 +1,7 @@
-// @font-face {
-//     font-family: Figtree;
-//     src: url("./fonts/Figtree.ttf") format("truetype");
-// }
+@font-face {
+    font-family: Figtree;
+    src: url("./fonts/Figtree.ttf") format("truetype");
+}
 
 * {
     box-sizing: border-box;
@@ -10,10 +10,7 @@
 }
 
 body {
-    font-family: Plus Jakarta Sans, Arial, Helvetica, sans-serif;
-    // display: flex;
-    // flex-direction: column;
-    // overflow: hidden;
+    font-family: Figtree, Arial, Helvetica, sans-serif;
     min-height: 100vh;
 }
 

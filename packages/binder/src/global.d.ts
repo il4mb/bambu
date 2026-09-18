@@ -1,7 +1,12 @@
 declare global {
-    interface NodeObjectData {
+    interface NodeObject {
         vars: {
+            [key: string]: string
+        },
+        events: {
             [key: string]: string
         }
     }
 }
+
+export {};

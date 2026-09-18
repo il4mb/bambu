@@ -1,5 +1,3 @@
-"use client";
-
 import useDarkMode from '@/theme/useDarkMode';
 import { Box, IconButton, useColorScheme } from '@mui/material';
 import { Moon, Sun } from 'lucide-react';

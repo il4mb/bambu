@@ -24,11 +24,11 @@ const DISPLAY_VALUES = [
 ];
 
 export default function DisplayProperty() {
-    const [value, setValue] = useProperty("display", '');
+    const [value, setValue] = useProperty("display", "");
 
     return (
         <PropertyLayout label="Display">
-            <SelectField value={value} onChange={(e) => setValue(e.target.value)} fullWidth>
+            <SelectField value={value ?? ""} onChange={(e) => setValue(e.target.value)} fullWidth>
                 <MenuItem value={""}>-- Select --</MenuItem>
                 {DISPLAY_VALUES.map((val) => (
                     <MenuItem key={val} value={val}>

@@ -1,24 +1,28 @@
 {
     "name": "@bambu/dev",
     "scripts": {
-        "dev": "bun --watch ./src/index.html",
-        "dev2": "bun --hot index.ts"
+        "dev:ts": "bun run --hot ./index.ts",
+        "dev:scss": "npx sass ./src/theme/theme.scss ./src/theme/theme.css --watch",
+        "dev": "bun run dev:ts & bun run dev:scss"
     },
     "dependencies": {
+        "@bambu/binder": "workspace:*",
         "@bambu/node": "workspace:*",
         "@bambu/react": "workspace:*",
         "@bambu/styled": "workspace:*",
-        "@bambu/binder": "workspace:*",
         "@mui/material": "^9.4.0",
         "@types/react": "^19.2.18",
         "@types/react-dom": "^19.2.5",
         "lucide-react": "^1.46.0",
+        "motion": "^13.4.0",
         "notistack": "^3.0.2",
         "react": "^19.2.8",
         "react-dom": "^19.2.8",
+        "sass": "^1.104.1",
         "scss": "^0.2.4"
     },
     "devDependencies": {
-        "@types/bun": "^1.4.2"
+        "@types/bun": "^1.4.2",
+        "bun-css-loader": "^1.4.2"
     }
 }

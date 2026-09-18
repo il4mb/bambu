@@ -1,5 +1,5 @@
 import { nanoid } from "nanoid";
-import { Change, Changed, createEvent, getChanges } from "../tools";
+import { Changed, createEvent, getChanges } from "../tools";
 import Container from "./Container";
 import type Model from "./Model";
 import { InferCommands, InferData } from "../types/infer";
@@ -8,6 +8,7 @@ import { createElement, createRef, RefObject } from "react";
 import EventEmitter from "./EventEmitter";
 import _ from "lodash";
 import { ChangedEvent } from "../types/event";
+import { NodeData } from "./NodeData";
 
 type NodeChangeEvent<T> = ChangedEvent<{
     value: T;
@@ -35,6 +36,8 @@ export default class Node<T extends ModuleName = ModuleName> extends EventEmitte
         rw?: Partial<NodeObject>
     ) {
         super();
+
+        const rawData = (rw?.data || {}) as any;
         this.state = {
             id: nanoid(),
             tagName: "div",
@@ -42,10 +45,10 @@ export default class Node<T extends ModuleName = ModuleName> extends EventEmitte
             parent: null,
             ...this.model.default,
             ...rw,
-            data: {
+            data: new NodeData({
                 ...this.model.default?.data,
-                ...rw.data
-            }
+                ...rawData
+            })
         };
     }
 

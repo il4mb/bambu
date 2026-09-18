@@ -1,4 +1,5 @@
 import { JSX } from "react/jsx-runtime";
+import { CSSProperties } from "react";
 
 export type Primitive =
     | string
@@ -34,14 +35,16 @@ declare global {
     export interface ModelRegistry { }
     export type ModuleName = keyof ModelRegistry;
 
-    export interface NodeObjectData { }
+    export interface NodeObjectData {
+
+    }
     export interface NodeObject {
         id: string;
         tagName: keyof JSX.IntrinsicElements
         order: number;
         parent: string | null;
-        // element: Element | null;
-        data: NodeObjectData
+        data: NodeData;
+        style?: Partial<CSSProperties>;
     }
 
     export type PlainNode<T extends ModuleName = ModuleName> = ToPlain<NodeObject> & {

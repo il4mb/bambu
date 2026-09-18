@@ -1,9 +1,6 @@
-"use client"
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-/* eslint-disable @typescript-eslint/no-empty-object-type */
 import { createTheme, alpha, PaletteMode, Shadows } from '@mui/material/styles';
 
-const fontFamily = 'Plus Jakarta Sans, Arial, Helvetica, sans-serif';
+const fontFamily = 'Figtree, Arial, Helvetica, sans-serif';
 
 declare module '@mui/material/Paper' {
 	interface PaperPropsVariantOverrides {

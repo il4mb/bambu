@@ -1,18 +1,14 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { useStyleController } from "./StyledProvider";
 import { useGestureController } from "@bambu/react";
 import ColorProperty from "./components/properties/ColorProperty";
 import { Node } from "@bambu/node";
 import { Box } from "@mui/material";
-import FontSizeProperty from "./components/properties/FontSizeProperty";
 import DisplayProperty from "./components/properties/DisplayProperty";
-import FontWightProperty from "./components/properties/FontWightProperty";
 import PaddingProperty from "./components/properties/PaddingProperty";
 import MarginProperty from "./components/properties/MarginProperty";
 import BackgroundProperty from "./components/properties/BackgroundProperty";
 import WidthProperty from "./components/properties/WidthProperty";
 import HeightProperty from "./components/properties/HeightProperty";
-import FontFamilyProperty from "./components/properties/FontFamilyProperty";
 import FontProperty from "./components/properties/FontProperty";
 import TextAlignProperty from "./components/properties/TextAlignProperty";
 import BorderProperty from "./components/properties/BorderProperty";
@@ -27,7 +23,6 @@ type StyleManagerProps = {};
 
 export default function StyledManager({}: StyleManagerProps) {
     const gesture = useGestureController();
-    const styled = useStyleController();
     const [nodes, setNodes] = useState([]);
     const selectionIdsRef = useRef(nodes.map((e) => e.id).sort());
 

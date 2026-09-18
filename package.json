@@ -5,9 +5,9 @@
         "packages/*"
     ],
     "scripts": {
-        "dev": "bun --watch --filter @bambu/dev dev",
-        "dev2": "bun --env-file=./packages/dev/.env ./packages/dev/src/index.html",
-        "dev3": "bun --hot --env-file=./packages/dev/.env ./packages/dev/index.ts"
+        "dev:ts": "bun run --hot ./packages/dev/index.ts",
+        "dev:scss": "npx sass ./packages/dev/src/theme/theme.scss ./packages/dev/src/theme/theme.css --watch",
+        "dev": "bun run dev:ts & bun run dev:scss"
     },
     "dependencies": {
         "chroma-js": "^3.2.0",

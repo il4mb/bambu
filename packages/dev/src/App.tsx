@@ -10,7 +10,7 @@ import {
     HilightSpot,
 } from "@bambu/react";
 import { StyledManager, StyledProvider } from "@bambu/styled";
-import { BinderProvider, VarsManager } from "@bambu/binder";
+import { BinderProvider, EventsManager, VarsManager } from "@bambu/binder";
 import { useMemo } from "react";
 
 type AppProps = {};
@@ -87,11 +87,15 @@ export default function App({}: AppProps) {
                 id: "444",
                 type: "button",
                 data: {
+                    text: "Click Me",
                     style: {
                         padding: "10px",
                         backgroundColor: "green",
                         color: "white",
                     },
+                },
+                events: {
+                    click: "alert('Button clicked!')",
                 },
             },
         ],
@@ -131,6 +135,7 @@ export default function App({}: AppProps) {
                                 </div>
                                 <div style={{ flexBasis: 260 }}>
                                     <StyledManager />
+                                    <EventsManager />
                                     <VarsManager />
                                 </div>
                             </div>

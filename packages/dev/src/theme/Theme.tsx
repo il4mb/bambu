@@ -1,5 +1,3 @@
-'use client';
-
 import { useEffect, useMemo, useState, ReactNode } from 'react';
 import { ThemeProvider, createTheme, useColorScheme } from '@mui/material/styles';
 import type { ThemeOptions } from '@mui/material/styles';
@@ -10,7 +8,7 @@ import { navigationCustomizations } from './customizations/navigation';
 import { surfacesCustomizations } from './customizations/surfaces';
 import { colorSchemes, typography, shadows, shape } from './themePrimitives';
 import { SnackbarProvider } from 'notistack';
-import "./theme.scss";
+import "./theme.css";
 
 const THEME_MODE_STORAGE_KEY = 'theme-mode';
 
