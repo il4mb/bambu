@@ -1,50 +1,60 @@
-import { ReactNode } from 'react';
-import { useWindowProvider } from './WindowProvider';
-import { Box, Stack, Typography } from '@mui/material';
-import { Minimize2, Maximize2, X } from 'lucide-react';
-import ActionButton from '../ActionButton';
+import { PointerEvent as ReactPointerEvent, ReactNode, MouseEvent as ReactMouseEvent } from "react";
+import { useWindowProvider } from "./WindowProvider";
+import { Box, Stack, Typography } from "@mui/material";
+import { Minimize2, Maximize2, X } from "lucide-react";
+import ActionButton from "../ActionButton";
+
 export type WindowHeaderProps = {
     title?: ReactNode;
 };
+
 export default function WindowHeader({ title }: WindowHeaderProps) {
-    const { state, setState } = useWindowProvider();
-    const toggleMaximize = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const {
+        state: { isMaximized },
+        startDrag,
+        toggleMaximize,
+        close,
+    } = useWindowProvider();
+
+    const handleToggleMaximize = (e: ReactMouseEvent<HTMLButtonElement>) => {
         e.stopPropagation();
-        setState((prev) => ({ ...prev, isMaximized: !prev.isMaximized }));
+        toggleMaximize();
     };
 
-    const handleClose = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const handleClose = (e: ReactMouseEvent<HTMLButtonElement>) => {
         e.stopPropagation();
-        // Implement close functionality here
+        close();
     };
 
-    const onMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+        // Ignore drags started on the action buttons themselves.
+        if ((e.target as HTMLElement).closest("button")) return;
         e.stopPropagation();
-        setState((prev) => ({
-            ...prev,
-            isDragging: true,
-            isMaximized: false,
-            dragStart: { x: e.clientX, y: e.clientY },
-        }));
+        startDrag(e.clientX, e.clientY);
     };
 
     return (
         <Box
-            onMouseDown={onMouseDown}
+            onPointerDown={onPointerDown}
+            onDoubleClick={() => toggleMaximize()}
             sx={{
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
                 padding: "4px 8px",
                 borderBottom: "1px solid rgba(0, 0, 0, 0.12)",
+                cursor: "grab",
+                touchAction: "none",
+                flex: "0 0 auto",
+                "&:active": { cursor: "grabbing" },
             }}
         >
-            <Typography component="div" variant="subtitle2">
+            <Typography component="div" variant="subtitle2" noWrap>
                 {title}
             </Typography>
             <Stack direction="row" spacing={1}>
-                <ActionButton onClick={toggleMaximize}>
-                    {state.isMaximized ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
+                <ActionButton onClick={handleToggleMaximize}>
+                    {isMaximized ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
                 </ActionButton>
                 <ActionButton onClick={handleClose}>
                     <X size={12} />
@@ -52,4 +62,4 @@ export default function WindowHeader({ title }: WindowHeaderProps) {
             </Stack>
         </Box>
     );
-};
+}

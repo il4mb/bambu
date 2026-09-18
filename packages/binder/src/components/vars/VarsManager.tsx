@@ -1,6 +1,6 @@
 import { ActionButton, useSelectedNodes, Window } from "@bambu/react";
 import { Box, Grid, Popover, Select, Stack, TextField, Typography } from "@mui/material";
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Pen } from "lucide-react";
 import { PropertyDescriptor } from "@bambu/node";
 import ScriptEditor from "../ScriptEditor";
@@ -15,12 +15,12 @@ export default function VarsManager({}: VarsManagerProps) {
         return node.data.all();
     }, [selectedNodes]);
 
-    const anchorRef = useRef<HTMLDivElement | null>(null);
+    const [anchor, setAnchor] = useState<HTMLElement | null>(null);
 
     return (
         <Box>
             <Typography variant="h6">Vars Manager</Typography>
-            <Stack sx={{ gap: 0.5 }} ref={anchorRef}>
+            <Stack sx={{ gap: 0.5 }} ref={setAnchor}>
                 {vars.map((v) => (
                     <Box
                         key={v.name}
@@ -70,9 +70,9 @@ export default function VarsManager({}: VarsManagerProps) {
 
             <Window
                 slotProps={{ header: { title: "Edit Variable" } }}
-                anchorEl={anchorRef.current}
+                anchorEl={anchor}
                 anchorOrigin={{ vertical: "top", horizontal: "left" }}
-                open
+                open={Boolean(anchor)}
             >
                 <Box sx={{ padding: 1, minWidth: 300 }}>
                     <Grid container spacing={1}>
