@@ -1,8 +1,35 @@
-import { AllTypes,  ItemAll, NodeProperty } from "../types/node-data";
+import { AllTypes, ItemAll, PropertyDescriptor } from "../types/node-data";
 
-export default class NodeData<T extends ModuleName = ModuleName> {
+/**
+ * Manages and formats structured data items for node properties.
+ *
+ * `NodeData` converts a key-value object into an array of typed `NodeProperty` items.
+ * It uses a JavaScript `Proxy` to support direct property reads and writes, seamlessly
+ * syncing object property access with the underlying `items` collection.
+ *
+ * @example
+ * ```ts
+ * const data = new NodeData({ title: "My Node", count: 5 });
+ *
+ * // Property-style dynamic access via Proxy
+ * console.log(data.title); // "My Node"
+ * data.count = 10;         // Updates existing property
+ * data.newItem = "Value";  // Adds a new property
+ *
+ * // Standard method interface
+ * data.get("title");       // Returns NodeProperty object
+ * data.delete("title");    // Removes item from internal array
+ * ```
+ */
+export default class NodeData {
+    /** Array storing all node property descriptors. */
+    public readonly items: PropertyDescriptor[] = [];
 
-    public readonly items: NodeProperty[] = [];
+    /**
+     * Initializes a new `NodeData` instance and sets up the Proxy wrapper.
+     *
+     * @param plainData - Plain object containing initial key-value pairs or `ItemAll` objects.
+     */
     constructor(plainData: NodeObjectData) {
         for (const [name, value] of Object.entries(plainData)) {
             this.items.push(this.createItem(name, value));
@@ -30,13 +57,16 @@ export default class NodeData<T extends ModuleName = ModuleName> {
         });
     }
 
-    private createItem(name: string, value: any): NodeProperty {
+    /**
+     * Constructs a `NodeProperty` object from a name and value.
+     */
+    private createItem(name: string, value: any): PropertyDescriptor {
         if (this.isUserDefined(value)) {
             return {
                 ...value,
                 renameable: true,
                 deleteable: true
-            }
+            };
         }
         return {
             name,
@@ -47,6 +77,9 @@ export default class NodeData<T extends ModuleName = ModuleName> {
         };
     }
 
+    /**
+     * Infers the `AllTypes` identifier string for a given value.
+     */
     private getType(value: any): AllTypes {
         if (typeof value === "string") return "string";
         if (typeof value === "number") return "number";
@@ -56,15 +89,29 @@ export default class NodeData<T extends ModuleName = ModuleName> {
         return "unknown";
     }
 
+    /**
+     * Type guard verifying whether a value matches the predefined `ItemAll` shape.
+     */
     private isUserDefined(value: any): value is ItemAll {
         return typeof value === "object" && value !== null && "name" in value && "type" in value && "value" in value;
     }
 
-
-    get(name: string): NodeProperty | undefined {
+    /**
+     * Retrieves the full `NodeProperty` descriptor by property name.
+     *
+     * @param name - The property key to search for.
+     * @returns The matching property descriptor, or `undefined` if non-existent.
+     */
+    get(name: string): PropertyDescriptor | undefined {
         return this.items.find(item => item.name === name);
     }
 
+    /**
+     * Sets or updates a property value by name.
+     *
+     * @param name - The property key to assign.
+     * @param value - The value to store.
+     */
     set(name: string, value: any): void {
         const item = this.items.find(item => item.name === name);
         if (item) {
@@ -74,6 +121,11 @@ export default class NodeData<T extends ModuleName = ModuleName> {
         }
     }
 
+    /**
+     * Removes a property item matching the specified name.
+     *
+     * @param name - The key of the item to delete.
+     */
     delete(name: string): void {
         const index = this.items.findIndex(item => item.name === name);
         if (index !== -1) {
@@ -81,19 +133,37 @@ export default class NodeData<T extends ModuleName = ModuleName> {
         }
     }
 
-    map(callback: (item: NodeProperty) => NodeProperty): NodeProperty[] {
+    /**
+     * Creates a new array populated with the results of calling a provided function on every item.
+     *
+     * @param callback - Function executing on each `NodeProperty`.
+     */
+    map(callback: (item: PropertyDescriptor) => PropertyDescriptor): PropertyDescriptor[] {
         return this.items.map(callback);
     }
 
-    filter(callback: (item: NodeProperty) => boolean): NodeProperty[] {
+    /**
+     * Filters items based on a predicate test.
+     *
+     * @param callback - Predicate function returning `true` to keep the item, or `false` otherwise.
+     */
+    filter(callback: (item: PropertyDescriptor) => boolean): PropertyDescriptor[] {
         return this.items.filter(callback);
     }
 
-    forEach(callback: (item: NodeProperty) => void): void {
+    /**
+     * Executes a provided callback once for each property item.
+     *
+     * @param callback - Function to execute for each item.
+     */
+    forEach(callback: (item: PropertyDescriptor) => void): void {
         this.items.forEach(callback);
     }
 
-    all(): NodeProperty[] {
+    /**
+     * Returns all registered `NodeProperty` items.
+     */
+    all(): PropertyDescriptor[] {
         return this.items;
     }
 }

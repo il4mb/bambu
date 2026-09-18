@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import CodeMirror, { BasicSetupOptions, ViewUpdate } from "@uiw/react-codemirror";
 import { javascript } from "@codemirror/lang-javascript";
+import { useIsDarkMode } from "@bambu/react";
 
 const setup: BasicSetupOptions = {
     lineNumbers: false,
@@ -25,17 +26,18 @@ const setup: BasicSetupOptions = {
 
 export interface ScriptEditorProps {}
 export default function ScriptEditor({}: ScriptEditorProps) {
+    const isDarkMode = useIsDarkMode();
     const [value, setValue] = useState("console.log('hello world!');");
     const onChange = useCallback((val: string, viewUpdate: ViewUpdate) => {
-        console.log("val:", val);
         setValue(val);
     }, []);
 
     return (
         <CodeMirror
             value={value}
-            height="auto"
+            height="200px"
             basicSetup={setup}
+            theme={isDarkMode ? "dark" : "light"}
             extensions={[javascript({ jsx: true })]}
             onChange={onChange}
         />

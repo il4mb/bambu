@@ -1,24 +1,26 @@
-import { ActionButton, useSelectedNodes } from "@bambu/react";
-import { Box, Stack, Typography } from "@mui/material";
-import { useMemo } from "react";
+import { ActionButton, useSelectedNodes, Window } from "@bambu/react";
+import { Box, Grid, Popover, Select, Stack, TextField, Typography } from "@mui/material";
+import { useMemo, useRef } from "react";
 import { Pen } from "lucide-react";
-import { NodeProperty } from "@bambu/node";
-
+import { PropertyDescriptor } from "@bambu/node";
+import ScriptEditor from "../ScriptEditor";
 
 export interface VarsManagerProps {}
 
 export default function VarsManager({}: VarsManagerProps) {
     const selectedNodes = useSelectedNodes();
-    const vars = useMemo<NodeProperty[]>(() => {
+    const vars = useMemo<PropertyDescriptor[]>(() => {
         if (selectedNodes.length != 1) return [];
         const node = selectedNodes[0];
         return node.data.all();
     }, [selectedNodes]);
 
+    const anchorRef = useRef<HTMLDivElement | null>(null);
+
     return (
         <Box>
             <Typography variant="h6">Vars Manager</Typography>
-            <Stack sx={{ gap: 0.5 }}>
+            <Stack sx={{ gap: 0.5 }} ref={anchorRef}>
                 {vars.map((v) => (
                     <Box
                         key={v.name}
@@ -66,7 +68,33 @@ export default function VarsManager({}: VarsManagerProps) {
                 ))}
             </Stack>
 
-            {/* <ScriptEditor /> */}
+            <Window
+                slotProps={{ header: { title: "Edit Variable" } }}
+                anchorEl={anchorRef.current}
+                anchorOrigin={{ vertical: "top", horizontal: "left" }}
+                open
+            >
+                <Box sx={{ padding: 1, minWidth: 300 }}>
+                    <Grid container spacing={1}>
+                        <Grid size={6}>
+                            <TextField fullWidth size="small" label="Name" variant="outlined" />
+                        </Grid>
+
+                        <Grid size={6}>
+                            <Select fullWidth size="small" label="Type" variant="outlined">
+                                <option value="string">String</option>
+                                <option value="number">Number</option>
+                                <option value="boolean">Boolean</option>
+                                <option value="object">Object</option>
+                                <option value="array">Array</option>
+                            </Select>
+                        </Grid>
+                        <Grid size={12}>
+                            <ScriptEditor />
+                        </Grid>
+                    </Grid>
+                </Box>
+            </Window>
         </Box>
     );
 }

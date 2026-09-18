@@ -10,7 +10,7 @@ export type ItemUnknown = { name: string, type: "unknown", value: unknown };
 
 export type ItemAll = ItemString | ItemNumber | ItemBoolean | ItemObject | ItemArray | ItemUnknown;
 export type AllTypes = ItemAll["type"];
-export type NodeProperty = ItemAll & {
+export type PropertyDescriptor = ItemAll & {
     renameable?: boolean;
     deleteable?: boolean;
 }

@@ -1,23 +1,11 @@
-import styled from "@emotion/styled";
 import { createPortal } from "react-dom";
 import { ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { styled } from "@mui/material";
+import WindowedHeader, { WindowHeaderProps } from "./WindowHeader";
+import { WindowProvider } from "./WindowProvider";
+import WindowContainer from "./WindowContainer";
 
-type Anchor = { x: number; y: number };
-
-const Container = styled.div<{ anchor: Anchor }>(({ anchor }) => ({
-    position: "fixed",
-    top: `${anchor.y ?? 0}px`,
-    left: `${anchor.x ?? 0}px`,
-    minWidth: 35,
-    minHeight: 50,
-    boxShadow: "0px 0px 1px #cccccc8e, 0px 0px 4px #cccccc46",
-    background: "#fff",
-    borderRadius: "4px",
-    zIndex: 1300,
-    overflow: "hidden",
-}));
-
-type MenuProps = {
+type WindowedProps = {
     open: boolean;
     anchorEl?: HTMLElement;
     onClose?: (e: React.MouseEvent<HTMLDivElement>) => void;
@@ -31,9 +19,12 @@ type MenuProps = {
         vertical?: "top" | "center" | "bottom";
         horizontal?: "left" | "center" | "right";
     };
+    slotProps?: {
+        header?: Partial<WindowHeaderProps>;
+    };
 };
 
-export default function Menu({
+export default function Windowed({
     open,
     anchorEl,
     onClose,
@@ -41,7 +32,8 @@ export default function Menu({
     anchorOrigin = {},
     anchorOffset = {},
     windowInset = { vertical: 10, horizontal: 10 },
-}: MenuProps) {
+    slotProps = {},
+}: WindowedProps) {
     const [container, setContainer] = useState<HTMLDivElement | null>(null);
     const [cRect, setCRect] = useState<DOMRect | undefined>();
     const [aRect, setARect] = useState<DOMRect | undefined>();
@@ -146,9 +138,9 @@ export default function Menu({
     if (!open) return null;
 
     return createPortal(
-        <Container anchor={anchor} ref={setContainer}>
-            {children}
-        </Container>,
+        <WindowProvider>
+            <WindowContainer>{children}</WindowContainer>
+        </WindowProvider>,
         document.body,
     );
 }
