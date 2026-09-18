@@ -1,24 +1,33 @@
-type ItemString = { name: string, type: "string", value: string };
-type ItemNumber = { name: string, type: "number", value: number };
-type ItemBoolean = { name: string, type: "boolean", value: boolean };
-type ItemObject = { name: string, type: "object", value: NodeData };
-type ItemArray = { name: string, type: "array", value: NodeData[] };
-type ItemUnknown = { name: string, type: "unknown", value: unknown };
+import { AllTypes,  ItemAll, NodeProperty } from "../types/node-data";
 
-export type ItemAll = ItemString | ItemNumber | ItemBoolean | ItemObject | ItemArray | ItemUnknown;
-export type AllTypes = ItemAll["type"];
-export type NodeProperty = ItemAll & {
-    renameable?: boolean;
-    deleteable?: boolean;
-}
+export default class NodeData<T extends ModuleName = ModuleName> {
 
-export class NodeData<T extends ModuleName = ModuleName> {
-
-    private items: NodeProperty[] = [];
+    public readonly items: NodeProperty[] = [];
     constructor(plainData: NodeObjectData) {
         for (const [name, value] of Object.entries(plainData)) {
             this.items.push(this.createItem(name, value));
         }
+
+        return new Proxy(this, {
+            get: (target, prop) => {
+                if (typeof prop === "string") {
+                    const item = target.items.find(item => item.name === prop);
+                    if (item) return item.value;
+                }
+                return Reflect.get(target, prop);
+            },
+            set: (target, prop, value) => {
+                if (typeof prop === "string") {
+                    const item = target.items.find(item => item.name === prop);
+                    if (item) {
+                        item.value = value;
+                    } else {
+                        target.items.push(target.createItem(prop, value));
+                    }
+                }
+                return Reflect.set(target, prop, value);
+            }
+        });
     }
 
     private createItem(name: string, value: any): NodeProperty {
@@ -52,4 +61,39 @@ export class NodeData<T extends ModuleName = ModuleName> {
     }
 
 
+    get(name: string): NodeProperty | undefined {
+        return this.items.find(item => item.name === name);
+    }
+
+    set(name: string, value: any): void {
+        const item = this.items.find(item => item.name === name);
+        if (item) {
+            item.value = value;
+        } else {
+            this.items.push(this.createItem(name, value));
+        }
+    }
+
+    delete(name: string): void {
+        const index = this.items.findIndex(item => item.name === name);
+        if (index !== -1) {
+            this.items.splice(index, 1);
+        }
+    }
+
+    map(callback: (item: NodeProperty) => NodeProperty): NodeProperty[] {
+        return this.items.map(callback);
+    }
+
+    filter(callback: (item: NodeProperty) => boolean): NodeProperty[] {
+        return this.items.filter(callback);
+    }
+
+    forEach(callback: (item: NodeProperty) => void): void {
+        this.items.forEach(callback);
+    }
+
+    all(): NodeProperty[] {
+        return this.items;
+    }
 }

@@ -3,3 +3,4 @@ export { default as Container } from "./Container";
 export { default as Register } from "./Register";
 export { default as Node } from "./Node";
 export { default as EventEmitter } from "./EventEmitter";
+export { default as NodeData } from "./NodeData";

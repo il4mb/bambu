@@ -2,13 +2,14 @@ import { nanoid } from "nanoid";
 import { Changed, createEvent, getChanges } from "../tools";
 import Container from "./Container";
 import type Model from "./Model";
-import { InferCommands, InferData } from "../types/infer";
+import { InferCommands } from "../types/infer";
 import { NestedKeys, NormalizeFunction, PathValue } from "../types/tools";
 import { createElement, createRef, RefObject } from "react";
 import EventEmitter from "./EventEmitter";
 import _ from "lodash";
 import { ChangedEvent } from "../types/event";
-import { NodeData } from "./NodeData";
+import NodeData from "./NodeData";
+import { INodeData } from "../types/node-data";
 
 type NodeChangeEvent<T> = ChangedEvent<{
     value: T;
@@ -147,8 +148,8 @@ export default class Node<T extends ModuleName = ModuleName> extends EventEmitte
         return this.owner.getChildren(this);
     }
 
-    public get data(): InferData<T> {
-        return this.state.data as InferData<T>;
+    public get data(): INodeData<T> {
+        return this.state.data;
     }
 
 

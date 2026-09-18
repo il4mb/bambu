@@ -68,8 +68,7 @@ export const useStyled = function <T>(
 
             try {
                 // Compute next value using current value ref
-                const nextValue =
-                    typeof next === "function" ? (next as (prev: T | undefined) => T)(valueRef.current) : next;
+                const nextValue = typeof next === "function" ? (next as (prev: T | undefined) => T)(valueRef.current) : next;
 
                 // 1. Optimistically update local React state & ref
                 setValue(nextValue);

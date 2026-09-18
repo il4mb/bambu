@@ -1,5 +1,6 @@
 import { JSX } from "react/jsx-runtime";
 import { CSSProperties } from "react";
+import type { NodeData } from "./core/NodeData";
 
 export type Primitive =
     | string
