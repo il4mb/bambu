@@ -17,13 +17,22 @@ export default function VarsManager({}: VarsManagerProps) {
 
     const [anchor, setAnchor] = useState<HTMLElement | null>(null);
 
+    const handleOpen = (event: React.MouseEvent<HTMLElement>) => {
+        setAnchor(event.currentTarget);
+    };
+
+    const handleClose = () => {
+        setAnchor(null);
+    };
+
     return (
         <Box>
             <Typography variant="h6">Vars Manager</Typography>
-            <Stack sx={{ gap: 0.5 }} ref={setAnchor}>
+            <Stack sx={{ gap: 0.5 }}>
                 {vars.map((v) => (
                     <Box
                         key={v.name}
+                        onClick={handleOpen}
                         sx={{
                             display: "flex",
                             gap: 1,
@@ -73,6 +82,7 @@ export default function VarsManager({}: VarsManagerProps) {
                 anchorEl={anchor}
                 anchorOrigin={{ vertical: "top", horizontal: "left" }}
                 open={Boolean(anchor)}
+                onClose={handleClose}
             >
                 <Box sx={{ padding: 1, minWidth: 300 }}>
                     <Grid container spacing={1}>

@@ -18,18 +18,17 @@ const ResizeHandle = styled("div")({
 
 export interface WindowContainerProps {
     children?: ReactNode;
-    /** Show the bottom-right resize handle. Default true. */
-    resizable?: boolean;
     slotProps?: {
         header?: Partial<WindowHeaderProps>;
     };
 }
 
-export default function WindowContainer({ children, resizable = true, slotProps = {} }: WindowContainerProps) {
+export default function WindowContainer({ children, slotProps = {} }: WindowContainerProps) {
     const {
         setContainer,
         state: { isEntering, isDragging, isResizing, rect },
         startResize,
+        resizable,
     } = useWindowProvider();
 
     return (

@@ -1,6 +1,6 @@
 import { createTheme, alpha, PaletteMode, Shadows } from '@mui/material/styles';
 
-const fontFamily = 'Figtree, Arial, Helvetica, sans-serif';
+
 
 declare module '@mui/material/Paper' {
 	interface PaperPropsVariantOverrides {
@@ -29,7 +29,7 @@ declare module '@mui/material/styles' {
 }
 
 const defaultTheme = createTheme();
-
+const fontFamily = 'Figtree, Arial, Helvetica, sans-serif';
 const customShadows: Shadows = [...defaultTheme.shadows];
 
 export const brand = {
@@ -129,6 +129,18 @@ export const getDesignTokens = (mode: PaletteMode) => {
 					light: brand[300],
 					main: brand[400],
 					dark: brand[700],
+				}),
+			},
+			secondary: {
+				light: gray[200],
+				main: gray[500],
+				dark: gray[700],
+				contrastText: gray[50],
+				...(mode === 'dark' && {
+					contrastText: gray[50],
+					light: gray[300],
+					main: gray[500],
+					dark: gray[700],
 				}),
 			},
 			info: {
@@ -262,6 +274,13 @@ export const colorSchemes = {
 				main: brand[400],
 				dark: brand[700],
 				contrastText: brand[50],
+			},
+			secondary: {
+				...gray,
+				light: gray[200],
+				main: gray[500],
+				dark: gray[700],
+				contrastText: gray[50],
 			},
 			info: {
 				50: brand[50],

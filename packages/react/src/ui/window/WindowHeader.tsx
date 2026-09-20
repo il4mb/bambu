@@ -53,10 +53,10 @@ export default function WindowHeader({ title }: WindowHeaderProps) {
                 {title}
             </Typography>
             <Stack direction="row" spacing={1}>
-                <ActionButton onClick={handleToggleMaximize}>
+                <ActionButton color="secondary" onClick={handleToggleMaximize}>
                     {isMaximized ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
                 </ActionButton>
-                <ActionButton onClick={handleClose}>
+                <ActionButton color={"error"} onClick={handleClose}>
                     <X size={12} />
                 </ActionButton>
             </Stack>

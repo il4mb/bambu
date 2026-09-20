@@ -1,3 +1,5 @@
+import Box from "@mui/material/Box";
+import { debounce } from "lodash";
 import {
     createContext,
     useContext,
@@ -13,7 +15,8 @@ import {
 } from "react";
 
 const EMPTY_RECT: IRect = { x: 0, y: 0, width: 0, height: 0 };
-const DEFAULT_MIN_SIZE = { width: 160, height: 90 };
+const DEFAULT_MIN_SIZE = { width: 300, height: 200 };
+const DRAG_THRESHOLD_PX = 3;
 
 export interface WindowState {
     rect: IRect;
@@ -32,12 +35,14 @@ type WindowProviderState = {
     setContainer: Dispatch<SetStateAction<HTMLDivElement | null>>;
     /** Begin a drag gesture from the given pointer position (viewport coords). Un-maximizes first if needed. */
     startDrag: (clientX: number, clientY: number) => void;
-    /** Begin a resize gesture (bottom-right corner) from the given pointer position. No-op while maximized. */
+    /** Begin a resize gesture (bottom-right corner) from the given pointer position. No-op while maximized or when `resizable` is false. */
     startResize: (clientX: number, clientY: number) => void;
     maximize: () => void;
     restore: () => void;
     toggleMaximize: () => void;
     close: () => void;
+    /** Passthrough of the `resizable` prop, so consumers (e.g. the resize handle) don't need it re-declared. */
+    resizable: boolean;
 };
 
 const WindowProviderContext = createContext<WindowProviderState | undefined>(undefined);
@@ -54,12 +59,14 @@ export type WindowProviderProps = {
         vertical?: "top" | "center" | "bottom";
         horizontal?: "left" | "center" | "right";
     };
-    /** Lower bound while resizing. Defaults to 160x90. */
+    /** Lower bound while resizing. Defaults to 300x200. */
     minSize?: { width?: number; height?: number };
     /** Upper bound while resizing. Defaults to the viewport size (minus edge spacing). */
     maxSize?: { width?: number; height?: number };
     /** Called when the header's close button (or `close()`) is used. The provider itself doesn't unmount anything. */
     onClose?: () => void;
+    /** Whether the corner handle can drag-resize the window. Defaults to true. Doesn't affect maximize/viewport reflow. */
+    resizable?: boolean;
 };
 
 export const WindowProvider = ({
@@ -71,6 +78,7 @@ export const WindowProvider = ({
     minSize,
     maxSize,
     onClose,
+    resizable = true,
 }: WindowProviderProps) => {
     const [state, setState] = useState<WindowState>({
         rect: EMPTY_RECT,
@@ -91,10 +99,27 @@ export const WindowProvider = ({
     // Explicit flag instead of comparing against EMPTY_RECT by reference -
     // more robust against future refactors that might clone/freeze it.
     const savedRectRef = useRef<IRect | null>(null);
-    const dragRef = useRef<{ startClientX: number; startClientY: number; startRect: IRect } | null>(null);
-    const resizeRef = useRef<{ startClientX: number; startClientY: number; startRect: IRect } | null>(null);
+
+    const dragRef = useRef<{
+        startClientX: number;
+        startClientY: number;
+        startRect: IRect;
+        /** Rect/maximized state exactly as they were before this gesture began - restored on Escape. */
+        originalRect: IRect;
+        originalIsMaximized: boolean;
+        wasMaximized: boolean;
+        hasMoved: boolean;
+    } | null>(null);
+    const resizeRef = useRef<{
+        startClientX: number;
+        startClientY: number;
+        startRect: IRect;
+        originalRect: IRect;
+        hasMoved: boolean;
+    } | null>(null);
 
     const hasWindow = typeof window !== "undefined";
+    const isInteracting = state.isDragging || state.isResizing;
 
     const vSpacing = edgeSpacing.vertical ?? 10;
     const hSpacing = edgeSpacing.horizontal ?? 10;
@@ -155,15 +180,30 @@ export const WindowProvider = ({
         [anchorOrigin, anchorOffset, clampToViewport],
     );
 
+    // Debounced trailing-edge flip of isEntering -> false. lodash's debounce
+    // already coalesces rapid calls, so no extra "already scheduled" guard
+    // is needed (a previous version carried one that was permanently dead -
+    // it never actually got set, so the check was always a no-op).
+    const exitEntering = useMemo(
+        () =>
+            debounce(() => {
+                setState((prev) => (prev.isEntering ? { ...prev, isEntering: false } : prev));
+            }, 0),
+        [],
+    );
+    useEffect(() => () => exitEntering.cancel(), [exitEntering]);
+
     const updateRects = useCallback(() => {
+        exitEntering.cancel();
         const rects = { ...rectsRef.current };
 
-        rects.anchor = anchorEl && anchorEl.isConnected
-            ? (() => {
-                  const { left, top, width, height } = anchorEl.getBoundingClientRect();
-                  return { x: left, y: top, width, height };
-              })()
-            : EMPTY_RECT;
+        rects.anchor =
+            anchorEl && anchorEl.isConnected
+                ? (() => {
+                      const { left, top, width, height } = anchorEl.getBoundingClientRect();
+                      return { x: left, y: top, width, height };
+                  })()
+                : EMPTY_RECT;
 
         if (container) {
             const { width, height } = container.getBoundingClientRect();
@@ -176,18 +216,22 @@ export const WindowProvider = ({
         setState((prev) => ({
             ...prev,
             anchorRect: rects.anchor,
-            // Don't clobber an intentional fullscreen layout with the
-            // anchor-derived one (e.g. anchorEl moving while maximized).
             rect: prev.isMaximized ? prev.rect : rects.container,
-            isEntering: false,
         }));
-    }, [container, anchorEl, calculateAnchorPosition]);
+        exitEntering();
+    }, [container, exitEntering, anchorEl, calculateAnchorPosition]);
 
-    // Calculate position once container and anchor elements are mounted
     useLayoutEffect(() => {
         if (!container || !state.isEntering) return;
         updateRects();
     }, [container, state.isEntering, updateRects]);
+
+    // Cancel any in-flight drag/resize before a maximize-state change so the
+    // two mechanisms never fight over `rect` on the same tick.
+    const cancelActiveGesture = useCallback(() => {
+        dragRef.current = null;
+        resizeRef.current = null;
+    }, []);
 
     // Handle window maximize and restore toggles
     useEffect(() => {
@@ -201,17 +245,22 @@ export const WindowProvider = ({
                 rect: { x: 0, y: 0, width: window.innerWidth, height: window.innerHeight },
             }));
         } else if (savedRectRef.current) {
-            setState((prev) => ({
-                ...prev,
-                rect: savedRectRef.current as IRect,
-            }));
-            savedRectRef.current = null;
+            setState((prev) => {
+                // If the state change was triggered by dragging, don't overwrite the dragging rect!
+                if (prev.isDragging) return prev;
+                return {
+                    ...prev,
+                    rect: savedRectRef.current as IRect,
+                };
+            });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [state.isMaximized, state.isEntering, hasWindow]);
 
     // Keep dimensions in sync with the viewport while maximized, and keep a
     // normal (non-maximized) window from drifting off-screen after a resize.
+    // This must run regardless of `resizable` - that flag only controls the
+    // corner drag-resize gesture, not viewport reflow.
     useEffect(() => {
         if (!hasWindow || state.isEntering) return;
 
@@ -239,13 +288,18 @@ export const WindowProvider = ({
     const startDrag = useCallback(
         (clientX: number, clientY: number) => {
             const baseRect = state.isMaximized && savedRectRef.current ? savedRectRef.current : state.rect;
-            dragRef.current = { startClientX: clientX, startClientY: clientY, startRect: baseRect };
+            dragRef.current = {
+                startClientX: clientX,
+                startClientY: clientY,
+                startRect: baseRect,
+                originalRect: state.rect,
+                originalIsMaximized: state.isMaximized,
+                wasMaximized: state.isMaximized,
+                hasMoved: false,
+            };
             setState((prev) => ({
                 ...prev,
-                isMaximized: false,
-                isDragging: true,
                 dragStart: { x: clientX, y: clientY },
-                rect: baseRect,
             }));
         },
         [state.isMaximized, state.rect],
@@ -254,69 +308,189 @@ export const WindowProvider = ({
     // --- Resize gesture -------------------------------------------------
     const startResize = useCallback(
         (clientX: number, clientY: number) => {
-            if (state.isMaximized) return;
-            resizeRef.current = { startClientX: clientX, startClientY: clientY, startRect: state.rect };
+            if (!resizable || state.isMaximized) return;
+            resizeRef.current = {
+                startClientX: clientX,
+                startClientY: clientY,
+                startRect: state.rect,
+                originalRect: state.rect,
+                hasMoved: false,
+            };
             setState((prev) => ({ ...prev, isResizing: true }));
         },
-        [state.isMaximized, state.rect],
+        [resizable, state.isMaximized, state.rect],
     );
 
     useEffect(() => {
         if (!hasWindow) return;
 
+        const endDrag = () => {
+            dragRef.current = null;
+            setState((prev) => (prev.isDragging ? { ...prev, isDragging: false } : prev));
+        };
+        const endResize = () => {
+            resizeRef.current = null;
+            setState((prev) => (prev.isResizing ? { ...prev, isResizing: false } : prev));
+        };
+
         const handlePointerMove = (e: PointerEvent) => {
             if (dragRef.current) {
-                const { startClientX, startClientY, startRect } = dragRef.current;
-                const { x, y } = clampToViewport(
-                    startRect.x + (e.clientX - startClientX),
-                    startRect.y + (e.clientY - startClientY),
-                    startRect.width,
-                    startRect.height,
-                );
-                setState((prev) => ({ ...prev, rect: { ...prev.rect, x, y } }));
+                const { startClientX, startClientY, wasMaximized, hasMoved } = dragRef.current;
+                const dx = e.clientX - startClientX;
+                const dy = e.clientY - startClientY;
+
+                // Enforce minimum movement threshold to ignore accidental clicks
+                if (!hasMoved) {
+                    if (Math.abs(dx) < DRAG_THRESHOLD_PX && Math.abs(dy) < DRAG_THRESHOLD_PX) return;
+
+                    dragRef.current.hasMoved = true;
+
+                    // If we just popped out of maximized view, offset the startRect dynamically
+                    // so the smaller window header stays roughly underneath the cursor.
+                    if (wasMaximized) {
+                        const ratioX = startClientX / window.innerWidth;
+                        const newX = startClientX - dragRef.current.startRect.width * ratioX;
+                        const newY = 0; // Assume header was glued to the top
+
+                        dragRef.current.startRect = {
+                            ...dragRef.current.startRect,
+                            x: newX,
+                            y: newY,
+                        };
+                    }
+                }
+
+                const { startRect } = dragRef.current;
+                const { x, y } = clampToViewport(startRect.x + dx, startRect.y + dy, startRect.width, startRect.height);
+
+                setState((prev) => ({
+                    ...prev,
+                    isDragging: true,
+                    isMaximized: false,
+                    rect: { ...prev.rect, ...startRect, x, y },
+                }));
             } else if (resizeRef.current) {
-                const { startClientX, startClientY, startRect } = resizeRef.current;
+                const { startClientX, startClientY, startRect, hasMoved } = resizeRef.current;
+                const dx = e.clientX - startClientX;
+                const dy = e.clientY - startClientY;
+
+                if (!hasMoved) {
+                    if (Math.abs(dx) < DRAG_THRESHOLD_PX && Math.abs(dy) < DRAG_THRESHOLD_PX) return;
+                    resizeRef.current.hasMoved = true;
+                }
+
                 const min = { ...DEFAULT_MIN_SIZE, ...minSize };
                 const maxW = maxSize?.width ?? window.innerWidth - hSpacing * 2;
                 const maxH = maxSize?.height ?? window.innerHeight - vSpacing * 2;
-                const width = Math.min(Math.max(startRect.width + (e.clientX - startClientX), min.width), maxW);
-                const height = Math.min(Math.max(startRect.height + (e.clientY - startClientY), min.height), maxH);
+                const width = Math.min(Math.max(startRect.width + dx, min.width), maxW);
+                const height = Math.min(Math.max(startRect.height + dy, min.height), maxH);
                 setState((prev) => ({ ...prev, rect: { ...prev.rect, width, height } }));
+            }
+            if (window.getSelection) {
+                const selection = window.getSelection();
+                if (selection) selection.removeAllRanges();
             }
         };
 
         const handlePointerUp = () => {
+            if (dragRef.current) endDrag();
+            if (resizeRef.current) endResize();
+        };
+
+        // Escape reverts to whatever the rect/maximized state was right
+        // before the gesture started, rather than just freezing in place.
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key !== "Escape") return;
             if (dragRef.current) {
+                const { originalRect, originalIsMaximized } = dragRef.current;
                 dragRef.current = null;
-                setState((prev) => ({ ...prev, isDragging: false }));
+                setState((prev) => ({
+                    ...prev,
+                    isDragging: false,
+                    isMaximized: originalIsMaximized,
+                    rect: originalRect,
+                }));
             }
             if (resizeRef.current) {
+                const { originalRect } = resizeRef.current;
                 resizeRef.current = null;
-                setState((prev) => ({ ...prev, isResizing: false }));
+                setState((prev) => ({ ...prev, isResizing: false, rect: originalRect }));
             }
         };
+
+        // If the tab loses focus mid-gesture (alt-tab, devtools, a native
+        // dialog, etc.) pointerup may never fire. Without this the window
+        // would be stuck "dragging" forever with the capture overlay stuck
+        // on top of everything. Just stop tracking - not a full cancel,
+        // since the user didn't ask to undo anything.
+        const handleBlur = () => handlePointerUp();
 
         window.addEventListener("pointermove", handlePointerMove);
         window.addEventListener("pointerup", handlePointerUp);
         window.addEventListener("pointercancel", handlePointerUp);
+        window.addEventListener("keydown", handleKeyDown);
+        window.addEventListener("blur", handleBlur);
         return () => {
             window.removeEventListener("pointermove", handlePointerMove);
             window.removeEventListener("pointerup", handlePointerUp);
             window.removeEventListener("pointercancel", handlePointerUp);
+            window.removeEventListener("keydown", handleKeyDown);
+            window.removeEventListener("blur", handleBlur);
         };
     }, [hasWindow, clampToViewport, minSize, maxSize, hSpacing, vSpacing]);
 
-    const maximize = useCallback(() => setState((prev) => ({ ...prev, isMaximized: true })), []);
-    const restore = useCallback(() => setState((prev) => ({ ...prev, isMaximized: false })), []);
-    const toggleMaximize = useCallback(() => setState((prev) => ({ ...prev, isMaximized: !prev.isMaximized })), []);
+    const maximize = useCallback(() => {
+        cancelActiveGesture();
+        setState((prev) => ({ ...prev, isDragging: false, isResizing: false, isMaximized: true }));
+    }, [cancelActiveGesture]);
+
+    const restore = useCallback(() => {
+        cancelActiveGesture();
+        setState((prev) => ({ ...prev, isDragging: false, isResizing: false, isMaximized: false }));
+    }, [cancelActiveGesture]);
+
+    const toggleMaximize = useCallback(() => {
+        cancelActiveGesture();
+        setState((prev) => ({ ...prev, isDragging: false, isResizing: false, isMaximized: !prev.isMaximized }));
+    }, [cancelActiveGesture]);
+
     const close = useCallback(() => onClose?.(), [onClose]);
 
     const value = useMemo(
-        () => ({ state, setState, container, setContainer, startDrag, startResize, maximize, restore, toggleMaximize, close }),
-        [state, container, startDrag, startResize, maximize, restore, toggleMaximize, close],
+        () => ({
+            state,
+            setState,
+            container,
+            setContainer,
+            startDrag,
+            startResize,
+            maximize,
+            restore,
+            toggleMaximize,
+            close,
+            resizable,
+        }),
+        [state, container, startDrag, startResize, maximize, restore, toggleMaximize, close, resizable],
     );
 
-    return <WindowProviderContext.Provider value={value}>{children}</WindowProviderContext.Provider>;
+    return (
+        <WindowProviderContext.Provider value={value}>
+            {children}
+            {isInteracting && (
+                <Box
+                    sx={{
+                        position: "fixed",
+                        top: 0,
+                        left: 0,
+                        width: "100vw",
+                        height: "100vh",
+                        zIndex: 9999,
+                        cursor: state.isDragging ? "grabbing" : state.isResizing ? "nwse-resize" : "default",
+                    }}
+                />
+            )}
+        </WindowProviderContext.Provider>
+    );
 };
 
 export const useWindowProvider = () => {
