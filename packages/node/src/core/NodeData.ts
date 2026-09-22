@@ -1,4 +1,4 @@
-import { AllTypes, ItemAll, PropertyDescriptor } from "../types/node-data";
+import { AllTypes, ItemAll, Descriptor } from "../types/node-data";
 
 /**
  * Manages and formats structured data items for node properties.
@@ -23,7 +23,7 @@ import { AllTypes, ItemAll, PropertyDescriptor } from "../types/node-data";
  */
 export default class NodeData {
     /** Array storing all node property descriptors. */
-    public readonly items: PropertyDescriptor[] = [];
+    public readonly items: Descriptor[] = [];
 
     /**
      * Initializes a new `NodeData` instance and sets up the Proxy wrapper.
@@ -60,7 +60,7 @@ export default class NodeData {
     /**
      * Constructs a `NodeProperty` object from a name and value.
      */
-    private createItem(name: string, value: any): PropertyDescriptor {
+    private createItem(name: string, value: any): Descriptor {
         if (this.isUserDefined(value)) {
             return {
                 ...value,
@@ -102,7 +102,7 @@ export default class NodeData {
      * @param name - The property key to search for.
      * @returns The matching property descriptor, or `undefined` if non-existent.
      */
-    get(name: string): PropertyDescriptor | undefined {
+    get(name: string): Descriptor | undefined {
         return this.items.find(item => item.name === name);
     }
 
@@ -138,7 +138,7 @@ export default class NodeData {
      *
      * @param callback - Function executing on each `NodeProperty`.
      */
-    map(callback: (item: PropertyDescriptor) => PropertyDescriptor): PropertyDescriptor[] {
+    map(callback: (item: Descriptor) => Descriptor): Descriptor[] {
         return this.items.map(callback);
     }
 
@@ -147,7 +147,7 @@ export default class NodeData {
      *
      * @param callback - Predicate function returning `true` to keep the item, or `false` otherwise.
      */
-    filter(callback: (item: PropertyDescriptor) => boolean): PropertyDescriptor[] {
+    filter(callback: (item: Descriptor) => boolean): Descriptor[] {
         return this.items.filter(callback);
     }
 
@@ -156,14 +156,14 @@ export default class NodeData {
      *
      * @param callback - Function to execute for each item.
      */
-    forEach(callback: (item: PropertyDescriptor) => void): void {
+    forEach(callback: (item: Descriptor) => void): void {
         this.items.forEach(callback);
     }
 
     /**
      * Returns all registered `NodeProperty` items.
      */
-    all(): PropertyDescriptor[] {
+    all(): Descriptor[] {
         return this.items;
     }
 }
