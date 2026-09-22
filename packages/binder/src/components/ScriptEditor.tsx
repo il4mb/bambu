@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import CodeMirror, { BasicSetupOptions, ViewUpdate } from "@uiw/react-codemirror";
 import { javascript } from "@codemirror/lang-javascript";
 import { useIsDarkMode } from "@bambu/react";
+import { Box } from "@mui/material";
 
 const setup: BasicSetupOptions = {
     lineNumbers: false,
@@ -24,22 +25,41 @@ const setup: BasicSetupOptions = {
     tabSize: 2,
 };
 
-export interface ScriptEditorProps {}
-export default function ScriptEditor({}: ScriptEditorProps) {
+export interface ScriptEditorProps {
+    value: string;
+}
+export default function ScriptEditor({ value: initialValue }: ScriptEditorProps) {
     const isDarkMode = useIsDarkMode();
-    const [value, setValue] = useState("console.log('hello world!');");
+    const [value, setValue] = useState(initialValue);
     const onChange = useCallback((val: string, viewUpdate: ViewUpdate) => {
         setValue(val);
     }, []);
 
     return (
-        <CodeMirror
+        <Box
+            component={CodeMirror}
             value={value}
-            height="200px"
+            // height="100%"
+            width="100%"
             basicSetup={setup}
             theme={isDarkMode ? "dark" : "light"}
             extensions={[javascript({ jsx: true })]}
             onChange={onChange}
+            sx={{
+                display: "flex",
+                flex: 1,
+                "& .cm-editor": {
+                    backgroundColor: "transparent",
+                    flex: 1,
+                    "&.cm-focused": {
+                        outline: "none",
+                    },
+                },
+                "& .cm-scroller": {
+                    overflowX: "unset",
+                    overflowY: undefined,
+                },
+            }}
         />
     );
 }

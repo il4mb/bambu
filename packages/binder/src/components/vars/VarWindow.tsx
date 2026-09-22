@@ -1,5 +1,5 @@
-import { Box, Grid, MenuItem, Select, TextField } from "@mui/material";
-import { SelectField, Window } from "@bambu/react";
+import { Box, Grid, MenuItem, Stack, TextField } from "@mui/material";
+import { Window } from "@bambu/react";
 import ScriptEditor from "../ScriptEditor";
 import { Descriptor } from "@bambu/node";
 import { useEffect, useState } from "react";
@@ -36,25 +36,32 @@ export default function VarWindow({ open = null, onClose }: VarWindowProps) {
             anchorOrigin={{ vertical: "top", horizontal: "left" }}
             open={open !== null}
             onClose={onClose}
+            minSize={{ width: 550, height: 350 }}
+            initialSize={{ width: 550, height: 350 }}
         >
-            <Box sx={{ padding: 1, minWidth: 300 }}>
-                <Grid container spacing={1}>
-                    <Grid size={6}>
+            <Box sx={{ p: 1, flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+                <Stack
+                    sx={{
+                        flexDirection: "row",
+                        gap: 1,
+                        flexWrap: "wrap",
+                        flex: 1,
+                        overflow: "hidden",
+                        alignItems: "flex-start",
+                    }}
+                >
+                    <Stack sx={{ gap: 1.5, maxWidth: 195, pt: '10px' }}>
                         <TextField
+                            disabled={open.item.renameable}
                             value={data?.name}
                             onChange={(e) => updateData("name", e.target.value)}
                             fullWidth
-                            size="small"
                             label="Name"
                             variant="outlined"
                         />
-                    </Grid>
-
-                    <Grid size={6}>
                         <TextField
                             value={data?.type}
                             onChange={(e) => updateData("type", e.target.value)}
-                            size="small"
                             select
                             variant="outlined"
                             fullWidth
@@ -67,11 +74,20 @@ export default function VarWindow({ open = null, onClose }: VarWindowProps) {
                             <MenuItem value="object">Object</MenuItem>
                             <MenuItem value="array">Array</MenuItem>
                         </TextField>
-                    </Grid>
-                    <Grid size={12}>
-                        <ScriptEditor />
-                    </Grid>
-                </Grid>
+                    </Stack>
+                    <Box
+                        sx={{
+                            flex: 1,
+                            minWidth: 300,
+                            overflow: "auto",
+                            display: "flex",
+                            maxHeight: "100%",
+                            alignSelf: "stretch",
+                        }}
+                    >
+                        <ScriptEditor value={JSON.stringify(open.item.value, null, 2)} />
+                    </Box>
+                </Stack>
             </Box>
         </Window>
     );

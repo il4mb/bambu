@@ -46,6 +46,7 @@ export default function WindowContainer({ children, slotProps = {} }: WindowCont
                 zIndex: 1300,
                 width: isEntering ? "auto" : `${rect.width}px`,
                 height: isEntering ? "auto" : `${rect.height}px`,
+                opacity: isEntering ? 0 : 1,
                 // No easing while the user is actively moving/resizing it -
                 // a transition fighting a pointer-driven update reads as lag.
                 transition: isEntering || isDragging || isResizing ? "none" : "all .1s ease-in-out",
@@ -56,14 +57,10 @@ export default function WindowContainer({ children, slotProps = {} }: WindowCont
             })}
         >
             <WindowedHeader title={slotProps.header?.title || "Windowed Component"} />
-            <Box
-                sx={{ flex: 1, minHeight: 0, overflow: "auto" }}
-            >
+            <Box sx={{ flex: 1, minHeight: 0, overflow: "auto", display: "flex", flexDirection: "column" }}>
                 {children}
             </Box>
-            {resizable && (
-                <ResizeHandle onPointerDown={(e) => startResize(e.clientX, e.clientY)} />
-            )}
+            {resizable && <ResizeHandle onPointerDown={(e) => startResize(e.clientX, e.clientY)} />}
         </Paper>
     );
 }

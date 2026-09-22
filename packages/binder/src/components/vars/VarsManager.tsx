@@ -1,5 +1,5 @@
-import { ActionButton, useSelectedNodes } from "@bambu/react";
-import { Box, Button, Stack, TextField, Typography } from "@mui/material";
+import { useSelectedNodes } from "@bambu/react";
+import { Box, Button, IconButton, Stack, TextField, Typography } from "@mui/material";
 import { useMemo, useState } from "react";
 import { Pen } from "lucide-react";
 import { Descriptor } from "@bambu/node";
@@ -78,9 +78,9 @@ export default function VarsManager({}: VarsManagerProps) {
                         >
                             {JSON.stringify(v.value)}
                         </Typography>
-                        <ActionButton>
+                        <IconButton color={"primary"} size={"small"}>
                             <Pen size={12} />
-                        </ActionButton>
+                        </IconButton>
                     </Box>
                 ))}
             </Stack>

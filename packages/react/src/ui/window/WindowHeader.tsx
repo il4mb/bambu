@@ -1,8 +1,7 @@
 import { PointerEvent as ReactPointerEvent, ReactNode, MouseEvent as ReactMouseEvent } from "react";
 import { useWindowProvider } from "./WindowProvider";
-import { Box, Stack, Typography } from "@mui/material";
+import { Box, IconButton, Stack, Typography } from "@mui/material";
 import { Minimize2, Maximize2, X } from "lucide-react";
-import ActionButton from "../ActionButton";
 
 export type WindowHeaderProps = {
     title?: ReactNode;
@@ -53,12 +52,12 @@ export default function WindowHeader({ title }: WindowHeaderProps) {
                 {title}
             </Typography>
             <Stack direction="row" spacing={1}>
-                <ActionButton color="secondary" onClick={handleToggleMaximize}>
+                <IconButton size={"small"} color="secondary" onClick={handleToggleMaximize}>
                     {isMaximized ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
-                </ActionButton>
-                <ActionButton color={"error"} onClick={handleClose}>
+                </IconButton>
+                <IconButton size={"small"} color={"error"} onClick={handleClose}>
                     <X size={12} />
-                </ActionButton>
+                </IconButton>
             </Stack>
         </Box>
     );

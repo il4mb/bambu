@@ -1,12 +1,12 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
-import Theme from "./theme/Theme";
+// import Theme from "./theme/Theme";
 
 function IndexComponent() {
     return (
-        <Theme>
+        // <Theme>
             <App />
-        </Theme>
+        // </Theme>
     );
 }
 

@@ -1,5 +1,6 @@
 import { Register } from "@bambu/node";
 import {
+    Theme,
     Canvas,
     Screen,
     ContainerProvider,
@@ -116,33 +117,35 @@ export default function App({}: AppProps) {
     );
 
     return (
-        <ContainerProvider register={new Register()} initialValue={initialValue}>
-            <ViewportProvider>
-                <GestureProvider>
-                    <BinderProvider>
-                        <StyledProvider fontsApi={fontsApi}>
-                            <div>
-                                <DeviceSwitch />
-                            </div>
-                            <div style={{ display: "flex", flex: 1 }}>
-                                <div style={{ flex: 1, position: "relative" }}>
-                                    <Screen>
-                                        <Canvas />
-                                        <SpotsContainer>
-                                            <HilightSpot />
-                                        </SpotsContainer>
-                                    </Screen>
+        <Theme>
+            <ContainerProvider register={new Register()} initialValue={initialValue}>
+                <ViewportProvider>
+                    <GestureProvider>
+                        <BinderProvider>
+                            <StyledProvider fontsApi={fontsApi}>
+                                <div>
+                                    <DeviceSwitch />
                                 </div>
-                                <div style={{ flexBasis: 260 }}>
-                                    <StyledManager />
-                                    <EventsManager />
-                                    <VarsManager />
+                                <div style={{ display: "flex", flex: 1 }}>
+                                    <div style={{ flex: 1, position: "relative" }}>
+                                        <Screen>
+                                            <Canvas />
+                                            <SpotsContainer>
+                                                <HilightSpot />
+                                            </SpotsContainer>
+                                        </Screen>
+                                    </div>
+                                    <div style={{ flexBasis: 260 }}>
+                                        <StyledManager />
+                                        <EventsManager />
+                                        <VarsManager />
+                                    </div>
                                 </div>
-                            </div>
-                        </StyledProvider>
-                    </BinderProvider>
-                </GestureProvider>
-            </ViewportProvider>
-        </ContainerProvider>
+                            </StyledProvider>
+                        </BinderProvider>
+                    </GestureProvider>
+                </ViewportProvider>
+            </ContainerProvider>
+        </Theme>
     );
 }

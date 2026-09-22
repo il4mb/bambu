@@ -51,18 +51,17 @@ export type WindowProviderProps = {
     children?: ReactNode;
     anchorEl?: HTMLElement | null;
     edgeSpacing?: { vertical?: number; horizontal?: number };
-    anchorOffset?: {
-        x?: number;
-        y?: number;
-    };
+    anchorOffset?: Point;
     anchorOrigin?: {
         vertical?: "top" | "center" | "bottom";
         horizontal?: "left" | "center" | "right";
     };
     /** Lower bound while resizing. Defaults to 300x200. */
-    minSize?: { width?: number; height?: number };
+    minSize?: Size;
     /** Upper bound while resizing. Defaults to the viewport size (minus edge spacing). */
-    maxSize?: { width?: number; height?: number };
+    maxSize?: Size;
+    /** Size to open the window at, overriding the measured content size. Still clamped to min/max size. Falls back to measuring `container` when omitted. */
+    initialSize?: Size;
     /** Called when the header's close button (or `close()`) is used. The provider itself doesn't unmount anything. */
     onClose?: () => void;
     /** Whether the corner handle can drag-resize the window. Defaults to true. Doesn't affect maximize/viewport reflow. */
@@ -77,6 +76,7 @@ export const WindowProvider = ({
     anchorOrigin = { vertical: "top", horizontal: "left" },
     minSize,
     maxSize,
+    initialSize,
     onClose,
     resizable = true,
 }: WindowProviderProps) => {
@@ -206,8 +206,23 @@ export const WindowProvider = ({
                 : EMPTY_RECT;
 
         if (container) {
-            const { width, height } = container.getBoundingClientRect();
+            // `initialSize` overrides the measured content box; either way,
+            // the result is still run through the same bounds the resize
+            // gesture enforces, so the initial size can never open smaller
+            // than minSize or larger than maxSize.
+            let { width, height } = initialSize ?? container.getBoundingClientRect();
+            const min = { ...DEFAULT_MIN_SIZE, ...minSize };
+            const maxW = maxSize?.width ?? window.innerWidth - hSpacing * 2;
+            const maxH = maxSize?.height ?? window.innerHeight - vSpacing * 2;
+            width = Math.min(Math.max(width, min.width), maxW);
+            height = Math.min(Math.max(height, min.height), maxH);
             const { x, y } = calculateAnchorPosition(width, height, rects.anchor);
+            if (x + width + hSpacing > window.innerWidth) {
+                width = window.innerWidth - x - hSpacing;
+            }
+            if (y + height + vSpacing > window.innerHeight) {
+                height = window.innerHeight - y - vSpacing;
+            }
             rects.container = { x, y, width, height };
         }
 
@@ -219,7 +234,7 @@ export const WindowProvider = ({
             rect: prev.isMaximized ? prev.rect : rects.container,
         }));
         exitEntering();
-    }, [container, exitEntering, anchorEl, calculateAnchorPosition]);
+    }, [container, exitEntering, hSpacing, vSpacing, minSize, maxSize, initialSize, anchorEl, calculateAnchorPosition]);
 
     useLayoutEffect(() => {
         if (!container || !state.isEntering) return;

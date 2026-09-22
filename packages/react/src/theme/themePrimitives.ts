@@ -1,7 +1,5 @@
 import { createTheme, alpha, PaletteMode, Shadows } from '@mui/material/styles';
 
-
-
 declare module '@mui/material/Paper' {
 	interface PaperPropsVariantOverrides {
 		highlighted: true;
@@ -32,6 +30,7 @@ const defaultTheme = createTheme();
 const fontFamily = 'Figtree, Arial, Helvetica, sans-serif';
 const customShadows: Shadows = [...defaultTheme.shadows];
 
+export const COLOR_SCHEME = ['primary', 'secondary', 'error', 'info', 'success', 'warning'];
 export const brand = {
 	50: 'hsl(210, 100%, 97%)',
 	100: 'hsl(210, 95%, 92%)',

@@ -10,14 +10,15 @@ type WindowedProps = {
     onClose?: () => void;
     children?: ReactNode;
     edgeSpacing?: { vertical?: number; horizontal?: number };
-    anchorOffset?: {
-        x?: number;
-        y?: number;
-    };
+    anchorOffset?: Partial<Point>;
     anchorOrigin?: {
         vertical?: "top" | "center" | "bottom";
         horizontal?: "left" | "center" | "right";
     };
+    minSize?: Size;
+    maxSize?: Size;
+    initialSize?: Size;
+
     slotProps?: {
         header?: Partial<WindowHeaderProps>;
     };
@@ -31,22 +32,25 @@ export default function Windowed({
     anchorOrigin = {},
     anchorOffset = {},
     edgeSpacing = { vertical: 10, horizontal: 10 },
+    maxSize,
+    minSize,
+    initialSize,
     slotProps = {},
 }: WindowedProps) {
-
     if (!open) return null;
 
     return createPortal(
         <WindowProvider
             anchorEl={anchorEl}
             anchorOrigin={anchorOrigin}
-            anchorOffset={anchorOffset}
+            anchorOffset={{ x: 0, y: 0, ...anchorOffset }}
             edgeSpacing={edgeSpacing}
             onClose={onClose}
+            initialSize={initialSize}
+            maxSize={maxSize}
+            minSize={minSize}
         >
-            <WindowContainer slotProps={slotProps}>
-                {children}
-            </WindowContainer>
+            <WindowContainer slotProps={slotProps}>{children}</WindowContainer>
         </WindowProvider>,
         document.body,
     );
