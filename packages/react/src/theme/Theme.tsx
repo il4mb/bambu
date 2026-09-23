@@ -11,8 +11,6 @@ import { colorSchemes, typography, shadows, shape } from "./themePrimitives";
 import FigtreeTtf from "./fonts/Figtree.ttf";
 import { CssBaseline } from "@mui/material";
 
-console.log(FigtreeTtf);
-
 const THEME_MODE_STORAGE_KEY = "theme-mode";
 
 interface Props {

@@ -11,7 +11,7 @@ declare global {
             commands: {
                 "find-root": () => any;
                 "toggle-editing": () => void;
-                "make-spanned": () => Node<'text'>;
+                "make-spanned": () => Node<'text'> | null;
                 "format": (tagName: string, selection: {}) => void
             },
             data: {
@@ -29,7 +29,8 @@ export default defineModel<'text'>({
     default: {
         tagName: "p",
         data: {
-            text: "Hallo World"
+            text: "Text Model",
+            editing: false
         }
     },
 
@@ -66,6 +67,7 @@ export default defineModel<'text'>({
                 });
             }
             console.warn("Root not found");
+            return null;
         },
         "format": function (tagName, selection) {
             if (!this.data.editing) return;

@@ -25,7 +25,7 @@ export default class Model<T extends ModuleName = ModuleName> {
      * - **ID:** Mengambil instance Model induk jika terdapat pewarisan (`extends`).
      * - **EN:** Retrieves the parent Model instance if inheritance (`extends`) is configured.
      */
-    get extends() {
+    get extends(): Model | null {
         const parent = this.definition.extends;
         return (parent && this.register.has(parent) ? this.register.get(parent) : null);
     }
@@ -110,7 +110,7 @@ export default class Model<T extends ModuleName = ModuleName> {
     }
 
     public onDrop(node: Node<T>, dropped: Node) {
-        return this.resolve(m => m.definition.onDrop)?.bind(this, node, dropped)?.();
+        return this.resolve(m => m.definition.onDrop)?.bind(node, dropped)?.();
     }
 
     /**

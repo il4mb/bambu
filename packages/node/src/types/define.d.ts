@@ -1,7 +1,8 @@
-import type { NodeObject, NodeObjectData } from "@/registry";
+// import type { NodeObject, NodeObjectData } from "@/registry";
 import type { FC, JSX, ReactNode, RefObject } from "react";
 import type { Model, Node } from "../core";
 import type { NormalizeFunction } from "./tools";
+import { Descriptor } from "./node-data";
 
 // TOP TYPED DEFINE
 export type Command<T extends ModuleName> = (this: Node<T>, ...args: any[]) => any;
@@ -38,6 +39,10 @@ export type Component<T extends ModuleName> = FC<ComponentProps<T>>;
 
 
 
+type DataDescriptor<T extends Record<string, any>> = {
+    [K in keyof T]: T[K] | Omit<Descriptor, 'name'>
+}
+
 export type ModelObject<T extends ModuleName> = {
     name: string;
     icon?: Icon;
@@ -64,12 +69,12 @@ export type ModelObject<T extends ModuleName> = {
         ModelRegistry[T] extends { data: infer D extends Record<string, any> }
         ? {
             default: Partial<NodeObject> & {
-                data: D & Partial<NodeObjectData>;
+                data: DataDescriptor<D & Partial<NodeObjectData>>;
             };
         }
         : {
             default?: Partial<NodeObject> & {
-                data?: Partial<NodeObjectData>
+                data?: DataDescriptor<Partial<NodeObjectData>>
             }
         }
     ) & (

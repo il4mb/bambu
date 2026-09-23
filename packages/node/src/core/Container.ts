@@ -2,6 +2,7 @@ import type Register from "./Register";
 import type Node from "./Node";
 import type Model from "./Model";
 import EventEmitter from "./EventEmitter";
+import StyleManager from "./StyleManager";
 
 /**
  * **ID:** Kelas Container utama yang mengelola seluruh pohon node (tree structure) dan siklus hidup node dalam dokumen.
@@ -27,6 +28,8 @@ export default class Container extends EventEmitter {
     /** **ID:** Node root elemen `<body>` / **EN:** Root `<body>` element node */
     readonly body: Node<"element">;
 
+    readonly styleManager: StyleManager;
+
     /**
      * @param register - **ID:** Registry penampung skema Model / **EN:** Model schema registry instance
      * @param nodes - **ID:** [Opsional] Array data mentah node untuk inisialisasi / **EN:** [Optional] Initial raw node objects array
@@ -34,7 +37,7 @@ export default class Container extends EventEmitter {
     constructor(public register: Register, nodes?: PlainNode[]) {
         super();
         this.head = this.createNode("element", { tagName: "head" });
-        this.body = this.createNode("element", { tagName: "body" });
+        this.body = this.createNode("element", { tagName: "body", data: { style: { minHeight: "100vh", minWidth: "100vw" } } });
 
         if (nodes && Array.isArray(nodes)) {
             Array.from(nodes)
@@ -42,6 +45,8 @@ export default class Container extends EventEmitter {
                 // @ts-ignore
                 .forEach(raw => this.createNode(raw.type || "element", raw));
         }
+
+        this.styleManager = new StyleManager(this);
     }
 
     /**
@@ -61,13 +66,12 @@ export default class Container extends EventEmitter {
      * @param nodeObject - **ID:** Data mentah atribut node / **EN:** Plain node initialization payload
      * @returns **ID:** Instance Node yang dibuat / **EN:** Created Node instance
      */
-    public createNode<T extends ModuleName>(type: T, nodeObject?: PlainNode): Node<T> {
+    public createNode<T extends ModuleName>(type: T, nodeObject?: PlainNode<T>): Node<T> {
 
         const typeModel = this.register.get(type) as Model<T> | undefined;
         if (!typeModel) {
             throw new Error(`Type ${type} not found in registry`);
         }
-
         const node = typeModel.buildNode(this, nodeObject) as Node<T>;
         this.collection.set(node.id, node);
 
@@ -184,13 +188,13 @@ export default class Container extends EventEmitter {
      * @param node - **ID:** Node titik awal / **EN:** Starting node reference
      * @returns **ID:** `ReadonlyMap` berisi node-node leluhur / **EN:** `ReadonlyMap` containing ancestor nodes
      */
-    public getAncestors<T extends ModuleName>(node: Node<T>): ReadonlyMap<string, Node<any>> {
+    public getAncestors<T extends ModuleName>(node: Node<T>): ReadonlyMap<string, Node> {
         this.ensureOwner(node);
-        const result = new Map<string, Node<any>>();
-        let currentNode: Node<any> | null = node;
+        const result = new Map<string, Node>();
+        let currentNode: Node | null = node;
 
         while (currentNode && currentNode.parent) {
-            const parentNode = currentNode.parent;
+            const parentNode: Node = currentNode.parent;
             if (!parentNode) break;
 
             result.set(parentNode.id, parentNode);

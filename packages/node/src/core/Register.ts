@@ -19,6 +19,6 @@ export default class Register {
     }
 
     get<T extends ModuleName>(name: string): Model<T> | null {
-        return this.registries.has(name) ? this.registries.get(name) : null;
+        return this.registries.has(name) ? this.registries.get(name)! : null;
     };
 }

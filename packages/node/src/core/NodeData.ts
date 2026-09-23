@@ -1,5 +1,10 @@
-import { AllTypes, ItemAll, Descriptor } from "../types/node-data";
+import { AllTypes, Descriptor, ItemBinding, ItemArray, ItemBoolean, ItemNumber, ItemObject, ItemString, ItemUnknown, ItemAll } from "../types/node-data";
+import Node from "./Node";
 
+
+const KNOWN_TYPE = [
+    "string", "number", "object", "array", "boolean", "binding", "unknown"
+];
 /**
  * Manages and formats structured data items for node properties.
  *
@@ -23,33 +28,44 @@ import { AllTypes, ItemAll, Descriptor } from "../types/node-data";
  */
 export default class NodeData {
     /** Array storing all node property descriptors. */
-    public readonly items: Descriptor[] = [];
+    public readonly descriptors: Descriptor[] = [];
+    private bindValues: Map<string, any> = new Map();
 
     /**
      * Initializes a new `NodeData` instance and sets up the Proxy wrapper.
      *
      * @param plainData - Plain object containing initial key-value pairs or `ItemAll` objects.
      */
-    constructor(plainData: NodeObjectData) {
+    constructor(readonly node: Node, plainData: NodeObjectData) {
         for (const [name, value] of Object.entries(plainData)) {
-            this.items.push(this.createItem(name, value));
+            this.descriptors.push(this.createItem(name, value));
         }
+
+        console.log(this.descriptors)
 
         return new Proxy(this, {
             get: (target, prop) => {
                 if (typeof prop === "string") {
-                    const item = target.items.find(item => item.name === prop);
-                    if (item) return item.value;
+                    const item = target.descriptors.find(item => item.name === prop);
+                    if (item) {
+                        if (item?.type === "binding") {
+                            return target.bindValues.get(item.name);
+                        }
+                        return item.value;
+                    }
                 }
                 return Reflect.get(target, prop);
             },
             set: (target, prop, value) => {
+                console.log("Set Prop", prop, value)
                 if (typeof prop === "string") {
-                    const item = target.items.find(item => item.name === prop);
+                    const item = target.descriptors.find(item => item.name === prop);
                     if (item) {
-                        item.value = value;
+                        if (item.type !== "binding") {
+                            item.value = value;
+                        }
                     } else {
-                        target.items.push(target.createItem(prop, value));
+                        target.descriptors.push(target.createItem(prop, value));
                     }
                 }
                 return Reflect.set(target, prop, value);
@@ -61,30 +77,32 @@ export default class NodeData {
      * Constructs a `NodeProperty` object from a name and value.
      */
     private createItem(name: string, value: any): Descriptor {
-        if (this.isUserDefined(value)) {
+
+        if (NodeData.isUserDefined(value)) {
             return {
+                // @ts-ignore
+                name: name,
+                renameable: false,
+                deleteable: false,
+                editable: value.type !== "binding",
                 ...value,
-                renameable: true,
-                deleteable: true,
-                changeable: true,
-                editable: true
             };
         }
         return {
             name,
-            type: this.getType(value),
+            type: NodeData.getType(value),
             value: value,
             renameable: false,
             deleteable: false,
-            changeable: false,
             editable: true
-        };
+        } as Descriptor;
     }
 
     /**
      * Infers the `AllTypes` identifier string for a given value.
      */
-    private getType(value: any): AllTypes {
+    static getType(value: any): AllTypes {
+        if (NodeData.isBinding(value)) return "binding";
         if (typeof value === "string") return "string";
         if (typeof value === "number") return "number";
         if (typeof value === "boolean") return "boolean";
@@ -96,9 +114,21 @@ export default class NodeData {
     /**
      * Type guard verifying whether a value matches the predefined `ItemAll` shape.
      */
-    private isUserDefined(value: any): value is ItemAll {
-        return typeof value === "object" && value !== null && "name" in value && "type" in value && "value" in value;
+    static isUserDefined(value: any): value is ItemAll {
+        return typeof value === "object" && value !== null && "type" in value && KNOWN_TYPE.includes(String(value.type));
     }
+
+    static isBinding(value: any): value is ItemBinding {
+        return typeof value === "object"
+            && value !== null
+            && "target" in value
+            && "path" in value
+            && Array.isArray(value.path)
+            && value.path.every((e: any) => typeof e === "string")
+            && "type" in value && value.type === "binding";
+    }
+
+
 
     /**
      * Retrieves the full `NodeProperty` descriptor by property name.
@@ -107,7 +137,7 @@ export default class NodeData {
      * @returns The matching property descriptor, or `undefined` if non-existent.
      */
     get(name: string): Descriptor | undefined {
-        return this.items.find(item => item.name === name);
+        return this.descriptors.find(item => item.name === name);
     }
 
     /**
@@ -117,11 +147,15 @@ export default class NodeData {
      * @param value - The value to store.
      */
     set(name: string, value: any): void {
-        const item = this.items.find(item => item.name === name);
+        const item = this.descriptors.find(item => item.name === name);
         if (item) {
-            item.value = value;
+            if (item.type === "binding") {
+                console.warn("Binding does't has value");
+            } else {
+                item.value = value;
+            }
         } else {
-            this.items.push(this.createItem(name, value));
+            this.descriptors.push(this.createItem(name, value));
         }
     }
 
@@ -131,9 +165,9 @@ export default class NodeData {
      * @param name - The key of the item to delete.
      */
     delete(name: string): void {
-        const index = this.items.findIndex(item => item.name === name);
+        const index = this.descriptors.findIndex(item => item.name === name);
         if (index !== -1) {
-            this.items.splice(index, 1);
+            this.descriptors.splice(index, 1);
         }
     }
 
@@ -143,7 +177,7 @@ export default class NodeData {
      * @param callback - Function executing on each `NodeProperty`.
      */
     map(callback: (item: Descriptor) => Descriptor): Descriptor[] {
-        return this.items.map(callback);
+        return this.descriptors.map(callback);
     }
 
     /**
@@ -152,7 +186,7 @@ export default class NodeData {
      * @param callback - Predicate function returning `true` to keep the item, or `false` otherwise.
      */
     filter(callback: (item: Descriptor) => boolean): Descriptor[] {
-        return this.items.filter(callback);
+        return this.descriptors.filter(callback);
     }
 
     /**
@@ -161,13 +195,13 @@ export default class NodeData {
      * @param callback - Function to execute for each item.
      */
     forEach(callback: (item: Descriptor) => void): void {
-        this.items.forEach(callback);
+        this.descriptors.forEach(callback);
     }
 
     /**
      * Returns all registered `NodeProperty` items.
      */
     all(): Descriptor[] {
-        return this.items;
+        return this.descriptors;
     }
 }

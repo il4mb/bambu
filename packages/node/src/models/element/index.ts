@@ -1,11 +1,13 @@
 import { defineModel } from "../helper";
 import { DefineModel } from "../../types/define";
-import { createElement } from "react";
+import { CSSProperties } from "react";
 
 declare global {
     interface ModelRegistry {
         element: DefineModel<{
-            data: { id: string },
+            data:{
+                style: CSSProperties;
+            }
             actions: ["select-parent"],
             commands: {
                 "select-parent": () => void;
@@ -17,9 +19,6 @@ declare global {
 
 export default defineModel({
     name: "element",
-    // component: ({ ref, node, children, ...rest }) => {
-    //    return createElement(node.tagName || "div", { ...rest, key: node.id }, children);
-    // },
     actions: {
         "select-parent": {
             title: "select parent"
@@ -29,11 +28,6 @@ export default defineModel({
         "select-parent": () => {
         },
         "delete": () => {
-        }
-    },
-    default: {
-        data: {
-            id: "123"
         }
     }
 });

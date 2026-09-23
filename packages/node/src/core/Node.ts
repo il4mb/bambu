@@ -4,7 +4,7 @@ import Container from "./Container";
 import type Model from "./Model";
 import { InferCommands } from "../types/infer";
 import { NestedKeys, NormalizeFunction, PathValue } from "../types/tools";
-import { createElement, createRef, RefObject } from "react";
+import { createElement, createRef, ReactElement, RefObject } from "react";
 import EventEmitter from "./EventEmitter";
 import _ from "lodash";
 import { ChangedEvent } from "../types/event";
@@ -16,11 +16,10 @@ type NodeChangeEvent<T> = ChangedEvent<{
     prev: T | null;
     path: string[];
     node: Node
-}>
-
+}>;
 type DataEventMap = {
     [K in NestedKeys<NodeObject>]: (event: NodeChangeEvent<PathValue<NodeObject, K>>) => void
-}
+};
 type EventMap = {
     element: (event: NodeChangeEvent<Element>) => void
     children: (event: NodeChangeEvent<ReadonlyMap<string, Node>>) => void
@@ -46,7 +45,7 @@ export default class Node<T extends ModuleName = ModuleName> extends EventEmitte
             parent: null,
             ...this.model.default,
             ...rw,
-            data: new NodeData({
+            data: new NodeData(this, {
                 ...this.model.default?.data,
                 ...rawData
             })
@@ -77,6 +76,7 @@ export default class Node<T extends ModuleName = ModuleName> extends EventEmitte
         });
         this.emitWith("element", (listeners) => {
             for (const callback of listeners.values()) {
+                // @ts-ignore
                 callback(event);
                 if (event.isStopPropagation) break;
             };
@@ -190,7 +190,7 @@ export default class Node<T extends ModuleName = ModuleName> extends EventEmitte
     public trigger<K extends keyof InferCommands<T>>(
         name: K,
         ...args: Parameters<NormalizeFunction<InferCommands<T>[K]>>
-    ): ReturnType<NormalizeFunction<InferCommands<T>[K]>> {
+    ): ReturnType<NormalizeFunction<InferCommands<T>[K]>> | undefined {
 
         const command = this.model.commands[name];
         if (typeof command === "function") {
@@ -206,8 +206,8 @@ export default class Node<T extends ModuleName = ModuleName> extends EventEmitte
         return undefined;
     }
 
-    public render() {
-        const children = Array.from(this.children.values()).map(n => n.render());
+    public render(): ReactElement {
+        const children = Array.from(this.children.values()).map((n: Node) => n.render());
         const component = this.model.component;
 
         return createElement(component, {
@@ -254,19 +254,19 @@ export default class Node<T extends ModuleName = ModuleName> extends EventEmitte
                     if (event.isStopPropagation) break;
                 }
             });
-            if (event.isDefaultPrevented) break;
+            // if (event.isDefaultPrevented) break;
 
-            const ownerBubleEvent = {
-                ...event,
-                node: this
-            }
-            this.owner.emitWith(`change:${ownerBubleEvent.path.join(".")}`, (listeners) => {
-                for (const callback of listeners.values()) {
-                    // @ts-ignore
-                    callback(ownerBubleEvent);
-                    if (ownerBubleEvent.isStopPropagation) break;
-                };
-            });
+            // const ownerBubleEvent = {
+            //     ...event,
+            //     node: this
+            // }
+            // this.owner.emitWith(`change:${ownerBubleEvent.path.join(".")}`, (listeners) => {
+            //     for (const callback of listeners.values()) {
+            //         // @ts-ignore
+            //         callback(ownerBubleEvent);
+            //         if (ownerBubleEvent.isStopPropagation) break;
+            //     };
+            // });
         }
     }
 }

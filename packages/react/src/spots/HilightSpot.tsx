@@ -194,8 +194,8 @@ export default function HilightSpot({}: HilightSpotProps) {
             style={{
                 position: "fixed",
                 inset: 0,
-                width: "100vw",
-                height: "100vh",
+                width: "0px",
+                height: "0px",
                 pointerEvents: "none",
                 overflow: "visible",
                 zIndex: 9999, // Ensure outlines render above the canvas

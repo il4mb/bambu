@@ -16,9 +16,6 @@ declare global {
 export default defineModel<'button'>({
     name: "button",
     extends: "text",
-    // component: ({ node, children, ...rest }) => {
-    //     return createElement("button", { ...rest, key: node.id }, children || node.data?.text || "Button");
-    // },
     default: {
         tagName: "button",
         data: {

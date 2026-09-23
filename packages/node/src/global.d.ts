@@ -37,7 +37,7 @@ declare global {
     export type ModuleName = keyof ModelRegistry;
 
     export interface NodeObjectData {
-
+        style?: CSSProperties;
     }
     export interface NodeObject {
         id: string;
@@ -45,7 +45,6 @@ declare global {
         order: number;
         parent: string | null;
         data: NodeData;
-        style?: Partial<CSSProperties>;
     }
 
     export type PlainNode<T extends ModuleName = ModuleName> = ToPlain<NodeObject> & {

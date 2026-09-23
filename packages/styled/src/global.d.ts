@@ -11,11 +11,6 @@ declare global {
     interface NodeObject {
         computed?: CSSStyleDeclaration;
     }
-    interface NodeObjectData {
-        style: {
-            [K in keyof CSSProperties]: CSSProperties[K];
-        }
-    }
 
     export interface Api {
         fetch: (params?: URLSearchParams) => Promise<any>;

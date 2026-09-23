@@ -56,8 +56,8 @@ export default function SelectingSpot({}: Props) {
             style={{
                 position: "fixed",
                 inset: 0,
-                width: "100vw",
-                height: "100vh",
+                width: "0px",
+                height: "0px",
                 pointerEvents: "none",
                 overflow: "visible",
             }}
