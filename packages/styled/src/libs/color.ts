@@ -7,12 +7,12 @@ export namespace Color {
     export const TYPES = ["hex", "rgb", "hsl"] as IColorType[];
 
     export const isValidType = (t: string) => TYPES.includes(t as any);
-    export const toHSLObject = (array: number[]) => Object.fromEntries(['h', 's', 'l'].map((k, i) => [k, array[i] ?? 0])) as IColorHSL;
+    export const toHSLObject = (array: number[]) => Object.fromEntries(['h', 's', 'l'].map((k, i) => [k, array[i] || 0])) as IColorHSL;
     export const toHSVObject = (array: number[] | IColorHSL): IColorHSV => {
         if (!Array.isArray(array)) {
             return toHSVObject([array.h, array.s, array.l]);
         }
-        return Object.fromEntries(['h', 's', 'v'].map((k, i) => [k, array[i] ?? 0])) as IColorHSV;
+        return Object.fromEntries(['h', 's', 'v'].map((k, i) => [k, array[i] || 0])) as IColorHSV;
     }
 
     export const createStop = (color: string | IColor, stop: number): IColorStop => ({

@@ -62,8 +62,8 @@ export default function Theme({ children, themeComponents }: Props) {
         let delay = setTimeout(() => {
             if (typeof window === "undefined") return;
             const savedMode = localStorage.getItem(THEME_MODE_STORAGE_KEY) as "light" | "dark" | null;
-            if (!savedMode || savedMode !== "light") {
-                localStorage.setItem(THEME_MODE_STORAGE_KEY, "light");
+            if (!savedMode) {
+                localStorage.setItem(THEME_MODE_STORAGE_KEY, "dark");
             }
             setMounted(true);
         }, 100);

@@ -31,6 +31,12 @@ export default function App({}: AppProps) {
                 },
             },
             {
+                type: "list",
+                data: {
+                    items: [],
+                },
+            },
+            {
                 type: "element",
                 data: {
                     style: {

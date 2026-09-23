@@ -66,6 +66,11 @@ export const inputsCustomizations: Components<Theme> = {
                                     backgroundColor: alpha(theme.palette[colorName].main, 0.75),
                                     color: theme.palette.getContrastText(theme.palette[colorName].main),
                                 },
+
+                                ...theme.applyStyles("dark", {
+                                    color: theme.palette[colorName].light,
+                                }),
+
                                 ...(ownerState.active && {
                                     backgroundColor: alpha(theme.palette[colorName].main, 0.85),
                                     color: theme.palette.getContrastText(theme.palette[colorName].main),

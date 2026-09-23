@@ -31,11 +31,6 @@ export default function VarsManager({}: VarsManagerProps) {
 
     return (
         <Box>
-            <Typography variant="h6">Vars Manager</Typography>
-            <TextField label="Search" size="small" fullWidth placeholder="Search..." sx={{ mb: 1 }} />
-            <Button variant="outlined" size="small" fullWidth sx={{ mb: 1 }}>
-                Add Variable
-            </Button>
             <Stack sx={{ gap: 0.5 }}>
                 {vars.map((v) => (
                     <Box

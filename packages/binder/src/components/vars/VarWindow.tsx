@@ -1,8 +1,8 @@
-import { Box, Grid, MenuItem, Stack, TextField } from "@mui/material";
+import { Box, MenuItem, Stack, TextField } from "@mui/material";
 import { Window } from "@bambu/react";
-import ScriptEditor from "../ScriptEditor";
 import { Descriptor } from "@bambu/node";
 import { useEffect, useState } from "react";
+import JsonEditor from "@/editors/JsonEditor";
 
 export interface VarWindowProps {
     open?: {
@@ -22,6 +22,7 @@ export default function VarWindow({ open = null, onClose }: VarWindowProps) {
     useEffect(() => {
         if (open) {
             setData(open.item);
+            console.log(open.item);
         } else {
             setData(null);
         }
@@ -38,8 +39,12 @@ export default function VarWindow({ open = null, onClose }: VarWindowProps) {
             onClose={onClose}
             minSize={{ width: 550, height: 350 }}
             initialSize={{ width: 550, height: 350 }}
+            anchorOffset={{
+                x: -500,
+                y: -50,
+            }}
         >
-            <Box sx={{ p: 1, flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+            <Box sx={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
                 <Stack
                     sx={{
                         flexDirection: "row",
@@ -50,9 +55,9 @@ export default function VarWindow({ open = null, onClose }: VarWindowProps) {
                         alignItems: "flex-start",
                     }}
                 >
-                    <Stack sx={{ gap: 1.5, maxWidth: 195, pt: '10px' }}>
+                    <Stack sx={{ gap: 1.5, maxWidth: 195, pt: "10px", pl: 1 }}>
                         <TextField
-                            disabled={open.item.renameable}
+                            disabled={data.renameable === false}
                             value={data?.name}
                             onChange={(e) => updateData("name", e.target.value)}
                             fullWidth
@@ -60,6 +65,7 @@ export default function VarWindow({ open = null, onClose }: VarWindowProps) {
                             variant="outlined"
                         />
                         <TextField
+                            disabled={data.changeable === false}
                             value={data?.type}
                             onChange={(e) => updateData("type", e.target.value)}
                             select
@@ -85,7 +91,7 @@ export default function VarWindow({ open = null, onClose }: VarWindowProps) {
                             alignSelf: "stretch",
                         }}
                     >
-                        <ScriptEditor value={JSON.stringify(open.item.value, null, 2)} />
+                        <JsonEditor value={JSON.stringify(data.value, null, 2)} />
                     </Box>
                 </Stack>
             </Box>

@@ -65,7 +65,9 @@ export default class NodeData {
             return {
                 ...value,
                 renameable: true,
-                deleteable: true
+                deleteable: true,
+                changeable: true,
+                editable: true
             };
         }
         return {
@@ -74,6 +76,8 @@ export default class NodeData {
             value: value,
             renameable: false,
             deleteable: false,
+            changeable: false,
+            editable: true
         };
     }
 
