@@ -17,20 +17,20 @@ export type NestedKeys<T, Depth extends number = MaxDepth> =
     : T extends object
     ? {
         [K in keyof T & string]:
-            T[K] extends Primitive | any[] | Function
-            ? K
-            : T[K] extends object
-            // 2. Pass `Decrement[Depth]` to the recursive call
-            ? K | `${K}.${NestedKeys<T[K], Decrement[Depth]>}`
-            : K
+        T[K] extends Primitive | any[] | Function
+        ? K
+        : T[K] extends object
+        // 2. Pass `Decrement[Depth]` to the recursive call
+        ? K | `${K}.${NestedKeys<T[K], Decrement[Depth]>}`
+        : K
     }[keyof T & string]
     : never;
 
 export type PathValue<T, P extends string> =
     P extends `${infer K}.${infer Rest}`
     ? K extends keyof T
-        ? PathValue<T[K], Rest>
-        : never
+    ? PathValue<T[K], Rest>
+    : never
     : P extends keyof T
     ? T[P]
     : never;

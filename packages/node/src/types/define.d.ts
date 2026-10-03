@@ -69,12 +69,12 @@ export type ModelObject<T extends ModuleName> = {
         ModelRegistry[T] extends { data: infer D extends Record<string, any> }
         ? {
             default: Partial<NodeObject> & {
-                data: DataDescriptor<D & Partial<NodeObjectData>>;
+                data: DataDescriptor<D & Partial<NodeDataOverridable>>;
             };
         }
         : {
             default?: Partial<NodeObject> & {
-                data?: DataDescriptor<Partial<NodeObjectData>>
+                data?: DataDescriptor<Partial<NodeDataOverridable>>
             }
         }
     ) & (

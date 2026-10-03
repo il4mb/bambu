@@ -1,5 +1,5 @@
 import { InferData } from "./infer";
-import NodeData from "../core/NodeData";
+import NodeData from "../core/_Collector";
 
 export type ItemString = { name: string, type: "string", value: string };
 export type ItemNumber = { name: string, type: "number", value: number };

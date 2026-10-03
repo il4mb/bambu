@@ -4,6 +4,7 @@ import type Register from "./Register";
 import Node from "./Node";
 import { InferCommands } from "../types/infer";
 import { createElement } from "react";
+import NodeManager from "./NodeManager";
 
 /**
  * - **ID:** Kelas pengelola skema Model yang mendefinisikan perilaku, hierarki pewarisan (inheritance), command, dan komponen visual UI.
@@ -138,7 +139,7 @@ export default class Model<T extends ModuleName = ModuleName> {
      * @param object - **ID:** Payload atribut mentah node / **EN:** Plain initialization payload
      * @returns **ID:** Instance Node terbuat / **EN:** Constructed Node instance
      */
-    public buildNode(owner: Container, object?: Partial<NodeObject>): Node<T> {
+    public buildNode(owner: NodeManager, object?: Partial<NodeObject>): Node<T> {
         const node = new Node<T>(owner, this, object);
         this.onCreate(node);
         return node;

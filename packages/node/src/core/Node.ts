@@ -1,225 +1,108 @@
 import { nanoid } from "nanoid";
-import { Changed, createEvent, getChanges } from "../tools";
+import Observable, { ObservableEventMap } from "./Observable";
 import Container from "./Container";
-import type Model from "./Model";
-import { InferCommands } from "../types/infer";
-import { NestedKeys, NormalizeFunction, PathValue } from "../types/tools";
-import { createElement, createRef, ReactElement, RefObject } from "react";
-import EventEmitter from "./EventEmitter";
-import _ from "lodash";
-import { ChangedEvent } from "../types/event";
+import Model from "./Model";
+import { isNumber } from "lodash";
+import { createRef, JSX, RefObject } from "react";
 import NodeData from "./NodeData";
-import { INodeData } from "../types/node-data";
+import NodeManager from "./NodeManager";
+import EventEmitter from "./EventEmitter";
 
-type NodeChangeEvent<T> = ChangedEvent<{
-    value: T;
-    prev: T | null;
-    path: string[];
-    node: Node
-}>;
-type DataEventMap = {
-    [K in NestedKeys<NodeObject>]: (event: NodeChangeEvent<PathValue<NodeObject, K>>) => void
+type NodeObjectWithElement = NodeObject & {
+    element: HTMLElement | null
 };
-type EventMap = {
-    element: (event: NodeChangeEvent<Element>) => void
-    children: (event: NodeChangeEvent<ReadonlyMap<string, Node>>) => void
-} & DataEventMap;
+type NodeEventMap = ObservableEventMap<NodeObjectWithElement> & {
+    [K in keyof NodeObject['data'] & string as `change:data.${K}`]: [Event];
+}
 
-export default class Node<T extends ModuleName = ModuleName> extends EventEmitter<EventMap> {
+export default class Node<T extends ModuleName = ModuleName> extends EventEmitter<NodeEventMap> {
 
-    public readonly state: NodeObject;
+    protected state: NodeObject;
     private readonly elementRef: RefObject<Element | null> = createRef();
+    readonly data: NodeData;
 
     constructor(
-        public readonly owner: Container,
+        public readonly owner: NodeManager,
         public readonly model: Model<T>,
-        rw?: Partial<NodeObject>
+        initial?: Partial<NodeObject>
     ) {
-        super();
 
-        const rawData = (rw?.data || {}) as any;
+        super();
         this.state = {
-            id: nanoid(),
-            tagName: "div",
-            order: 0,
-            parent: null,
-            ...this.model.default,
-            ...rw,
-            data: new NodeData(this, {
+            id: initial?.id || nanoid(),
+            tagName: initial?.tagName || this.model.default?.tagName || "div",
+            order: initial?.order && isNumber(initial.order) ? Number(initial.order) : 0,
+            parent: initial?.parent || null,
+            data: {
                 ...this.model.default?.data,
-                ...rawData
-            })
-        };
+                ...initial?.data
+            }
+        }
+
+        this.data = new NodeData(this.state.data);
     }
 
-    public get id() {
+    get id(): string {
         return this.state.id;
     }
 
-    public get tagName() {
-        return this.state.tagName || "div";
+    get tagName(): keyof JSX.IntrinsicElements {
+        return this.state.tagName;
     }
 
-    public get element() {
-        return this.elementRef.current;
-    }
-    public set element(value: Element | null) {
-        const prev = this.elementRef.current;
-        if (prev === value) return;
-        this.elementRef.current = value;
-
-        const event = createEvent({
-            node: this,
-            path: ["element"],
-            prev,
-            value
-        });
-        this.emitWith("element", (listeners) => {
-            for (const callback of listeners.values()) {
-                // @ts-ignore
-                callback(event);
-                if (event.isStopPropagation) break;
-            };
-        });
-        if (!event.isDefaultPrevented) {
-            this.owner.emitWith("change:element", (listeners) => {
-                for (const callback of listeners.values()) {
-                    callback(event);
-                    if (event.isStopPropagation) break;
-                };
-            });
-        }
+    get element(): Element | null {
+        return this.elementRef.current || null;
     }
 
-    public get order() {
-        return this.state.order || 0;
-    }
-    public set order(value: number) {
-        this.state.order = value;
+    get order() {
+        return this.state.order;
     }
 
-
-    public get parent(): Node | null {
-        return this.state.parent
-            ? this.owner.findNode(this.state.parent) ?? null
-            : null;
+    get parent(): Node | null {
+        return this.state.parent ? this.owner.findNode(this.state.parent) : null;
     }
 
-    public set parent(parent: Node | null) {
-        const prevParent = this.parent;
-
-        // Nothing changed.
-        if (prevParent?.id === parent?.id) {
-            return;
-        }
-
-        // Remove from previous parent.
-        if (prevParent) {
-            const prevChildren = this.owner.getChildren(prevParent);
-            this.state.parent = null;
-            const nextChildren = this.owner.getChildren(prevParent);
-            // prevParent.emitWith(
-            //     new NodeChangeEvent("children", this, {
-            //         value: nextChildren,
-            //         prev: prevChildren,
-            //     })
-            // );
-        }
-
-        // Add to new parent.
-        if (parent) {
-            const prevChildren = this.owner.getChildren(parent);
-            this.state.parent = parent.id;
-            const nextChildren = this.owner.getChildren(parent);
-            // parent.emitWith(
-            //     new NodeChangeEvent("children", this, {
-            //         value: nextChildren,
-            //         prev: prevChildren,
-            //     })
-            // );
-        }
-    }
-
-    public get descendants() {
+    get descendants(): ReadonlyMap<string, Node> {
         return this.owner.getDescendants(this);
     }
 
-    public get children() {
+    get children(): ReadonlyMap<string, Node> {
         return this.owner.getChildren(this);
     }
 
-    public get data(): INodeData<T> {
-        return this.state.data;
-    }
-
-
-    public set<K extends NestedKeys<NodeObject>>(key: K, value: PathValue<NodeObject, K> | ((prev: PathValue<NodeObject, K>) => PathValue<NodeObject, K>)): void;
-    public set(state: NodeObject | ((prev: NodeObject) => NodeObject)): void;
-    public set(key?: string | NodeObject | ((prev: NodeObject) => NodeObject), value?: any | ((prev: any) => any)) {
-
-        // 1. FIX: Deep clone the state. 
-        // (You can also use the native structuredClone(this.state) if you prefer)
-        const oldState = _.cloneDeep(this.state);
-
-        // --- PATH UPDATE ---
-        if (typeof key === "string") {
-            const targetValue = _.get(this.state, key);
-            const nextValue = typeof value === "function" ? value(targetValue) : value;
-
-            // Ignore No Change
-            if (_.isEqual(targetValue, nextValue)) return;
-
-            _.set(this.state, key, nextValue);
-
-            this.emitChanges(getChanges(oldState, this.state));
-            return;
+    public set<K extends keyof NodeObjectWithElement>(key: K, newValue: NodeObjectWithElement[K]): void {
+        if (key === "data") {
+            throw new Error("Can't set data propery is readonly");
         }
 
-        // --- FULL STATE REPLACEMENT ---
-        const nextValue = typeof key === "function" ? key(this.state) : key;
-
-        // 2. FIX: Prevent empty diffs if the new state object is identical to the old one
-        if (_.isEqual(this.state, nextValue)) return;
-        _.set(this, "state", nextValue);
-
-        this.emitChanges(getChanges(oldState, this.state));
-    }
-
-
-
-    public trigger<K extends keyof InferCommands<T>>(
-        name: K,
-        ...args: Parameters<NormalizeFunction<InferCommands<T>[K]>>
-    ): ReturnType<NormalizeFunction<InferCommands<T>[K]>> | undefined {
-
-        const command = this.model.commands[name];
-        if (typeof command === "function") {
-            // Emit Before Event
-
-            const value = command.apply(this, args);
-
-            // Emit After
-
-            return value;
+        let oldValue = null;
+        if (key === "element") {
+            oldValue = this.elementRef.current;
+            this.elementRef.current = newValue as HTMLElement;
+        } else {
+            // @ts-ignore
+            oldValue = this.state[key];
+            // @ts-ignore
+            this.state[key] = newValue;
         }
 
-        return undefined;
+        let event = undefined;
+        for (const eventName of [`change:${key}`, "change"] as const) {
+            event = this.fire(eventName, { property: key, newValue, oldValue }, event);
+            if (event?.isDefaultPrevented) break;
+        }
+
+        if (event?.isStopPropagation === false) {
+            event = null;
+            for (const eventName of [`node:${this.id}:change:${key}`, `node:${this.id}:change`, `node:change:${key}`, "node:change"] as const) {
+                // @ts-ignore
+                event = this.owner.container.fire(eventName, { property: key, newValue, oldValue }, event);
+                if (event?.isDefaultPrevented) break;
+            }
+        }
     }
 
-    public render(): ReactElement {
-        const children = Array.from(this.children.values()).map((n: Node) => n.render());
-        const component = this.model.component;
-
-        return createElement(component, {
-            ref: (element: Element) => {
-                this.element = element;
-            },
-            key: this.id,
-            node: this
-        } as any, children);
-    }
-
-    public typeOf(type: ModuleName) {
+    public typeOf(type: ModuleName): boolean {
         let current = this.model;
         while (current) {
             if (current.name === type) return true;
@@ -229,44 +112,11 @@ export default class Node<T extends ModuleName = ModuleName> extends EventEmitte
         return false;
     }
 
-
-    public isDroppable(target: Node) {
+    public isDroppable(target: Node): boolean {
         return this.model.isDroppable(this, target);
     }
 
-    public isAcceptable(target: Node) {
+    public isAcceptable(target: Node): boolean {
         return this.model.isAcceptable(this, target);
-    }
-
-    private emitChanges(changes: Changed[]) {
-
-        for (const change of changes.reverse()) {
-            const event = createEvent({
-                path: change.path,
-                value: change.value,
-                prev: change.prev
-            });
-            // @ts-ignore
-            this.emitWith(event.path.join("."), (listeners) => {
-                for (const callback of listeners) {
-                    // @ts-ignore
-                    callback(event);
-                    if (event.isStopPropagation) break;
-                }
-            });
-            // if (event.isDefaultPrevented) break;
-
-            // const ownerBubleEvent = {
-            //     ...event,
-            //     node: this
-            // }
-            // this.owner.emitWith(`change:${ownerBubleEvent.path.join(".")}`, (listeners) => {
-            //     for (const callback of listeners.values()) {
-            //         // @ts-ignore
-            //         callback(ownerBubleEvent);
-            //         if (ownerBubleEvent.isStopPropagation) break;
-            //     };
-            // });
-        }
     }
 }

@@ -1,6 +1,6 @@
 import { JSX } from "react/jsx-runtime";
 import { CSSProperties } from "react";
-import type { NodeData } from "./core/NodeData";
+// import type { NodeData } from "./core/_Collector";
 
 export type Primitive =
     | string
@@ -36,19 +36,15 @@ declare global {
     export interface ModelRegistry { }
     export type ModuleName = keyof ModelRegistry;
 
-    export interface NodeObjectData {
+    export interface NodeDataOverridable {
         style?: CSSProperties;
     }
-    export interface NodeObject {
+
+    export type NodeObject = {
         id: string;
         tagName: keyof JSX.IntrinsicElements
         order: number;
         parent: string | null;
-        data: NodeData;
-    }
-
-    export type PlainNode<T extends ModuleName = ModuleName> = ToPlain<NodeObject> & {
-        type?: T
-        children?: PlainNode[]
+        data: NodeDataOverridable;
     }
 }

@@ -3,7 +3,7 @@
 import { Commands } from "./define";
 
 export type InferData<T extends ModuleName> =
-    NodeObjectData &
+    NodeDataOverridable &
     (
         ModelRegistry[T] extends {
             extends: infer P extends ModuleName;
