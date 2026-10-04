@@ -1,6 +1,6 @@
 import { isEqual } from "lodash";
-import { CreateEventMap, InferNodeData } from "../types";
-import EventEmitter, { EventDetail, SimpleEvent } from "./EventEmitter";
+import { AddPrefix, CreateEventMap, EventDetail, InferNodeData } from "./types";
+import EventEmitter from "./core/EventEmitter";
 import Node from "./Node";
 
 const TYPE_DATA = ["string", "number", "object", "boolean", "array", "unknown", "binding"] as const;
@@ -11,18 +11,15 @@ type Descriptor = {
     type: TypeName;
 
 }
-type TNodeData<T extends ModuleName, O extends InferNodeData<T> = InferNodeData<T>> = {
-    [K in keyof O]: Descriptor
+type TNodeDataDescriptor<T extends ModuleName> = {
+    [K in keyof InferNodeData<T>]: Descriptor
 }
-
-export type INodeData<T extends ModuleName, D extends InferNodeData<T> = InferNodeData<T>> = {
-    [K in keyof D]: D[K];
-} & NodeData<T>;
+type Events<T extends ModuleName> = CreateEventMap<'change'| AddPrefix<"change:", keyof InferNodeData<T> & string>>;
 
 export default class NodeData<
     T extends ModuleName,
-    O extends Record<string, Descriptor> = TNodeData<T>
-> extends EventEmitter<{ change: [SimpleEvent] } & CreateEventMap<O, 'change:'>> {
+    O extends Record<string, Descriptor> = TNodeDataDescriptor<T>
+> extends EventEmitter<Events<T>> {
 
     // Allow TypeScript to recognize dynamic dot-notation properties
     [key: string]: any;
@@ -101,6 +98,7 @@ export default class NodeData<
         this.state[key] = newValue;
 
         const eventDetail = { target: this, property: [String(key)], oldValue, newValue };
+        // @ts-ignore
         this.fire(["change", `change:${String(key)}`], eventDetail);
     }
 
@@ -108,8 +106,7 @@ export default class NodeData<
         return this.state[key];
     }
 
-
-    public fire<K extends "change" | keyof CreateEventMap<O, "change:">, T extends object = object, V = any>(events: K | K[], detail: EventDetail<T, V>) {
+    public fire<K extends keyof Events<T>, O extends object = object, V = any>(events: K | K[], detail: EventDetail<O, V>) {
         super.fire(events, detail);
         // @ts-ignore
         this.node.fire(['change', 'change:data', `change:data:${detail.property.join(":")}`], detail);

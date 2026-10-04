@@ -1,5 +1,4 @@
-import NodeData from "../core/NodeData";
-import { InferNodeData } from "./infer";
+import NodeData from "../NodeData";
 import { Commands } from "./define";
 
 export type InferNodeData<T extends ModuleName> =

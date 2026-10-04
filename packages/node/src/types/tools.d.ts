@@ -34,3 +34,6 @@ export type PathValue<T, P extends string> =
     : P extends keyof T
     ? T[P]
     : never;
+
+
+export type AddPrefix<P extends string, T extends string> = `${P}${T}`;

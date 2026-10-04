@@ -1,13 +1,17 @@
-import type Node from "./Node";
-import type Model from "./Model";
-import Container from "./Container";
+import type Node from "../Node";
+import type Model from "../Model";
+import Container from "../Container";
 import { ShallowOptionalNode } from "../types/node";
+import EventEmitter from "./EventEmitter";
+import { CreateEventMap } from "../types";
+
+type Event = CreateEventMap<'add' | 'remove' | 'update'>;
 
 /**
  * **ID:** Kelas Container utama yang mengelola seluruh pohon node (tree structure) dan siklus hidup node dalam dokumen.
  * **EN:** Primary Container class managing the entire node tree structure and lifecycle within a document.
  */
-export default class NodeManager {
+export default class NodeManager extends EventEmitter<Event> {
 
     /** **ID:** Inkremen fraksional terkecil untuk pengurutan node / **EN:** Smallest fractional increment for node ordering */
     static ORDER_EPS = 0.001;
@@ -32,13 +36,13 @@ export default class NodeManager {
      * @param nodes - **ID:** [Opsional] Array data mentah node untuk inisialisasi / **EN:** [Optional] Initial raw node objects array
      */
     constructor(public container: Container, nodes?: ShallowOptionalNode[]) {
+        super();
         this.head = this.createNode("element", { tagName: "head" });
         this.body = this.createNode("element", { tagName: "body", data: { style: { minHeight: "100vh", minWidth: "100vw" } } });
 
         if (nodes && Array.isArray(nodes)) {
             Array.from(nodes)
                 .sort((a, b) => (a.order || 0) - (b.order || 0))
-                // @ts-ignore
                 .forEach(raw => {
                     const { type = "element", ...rest } = raw;
                     this.createNode(type, rest)
@@ -374,7 +378,7 @@ export default class NodeManager {
      * @param nodes - **ID:** Daftar node yang akan diperiksa / **EN:** Node instances to validate
      */
     public ensureOwner(...nodes: Node<any>[]) {
-        if (!nodes.every(e => e.owner === this)) {
+        if (!nodes.every(e => e.manage === this)) {
             throw new Error("Cannot find ancestors node is not owned by this document");
         }
     }

@@ -1,5 +1,5 @@
 import { CSSProperties } from "react";
-import Container from "./Container";
+import Container from "../Container";
 
 export default class StyleManager {
 

@@ -1,32 +1,13 @@
-import { isEqual } from "lodash";
+import { EventCallback, EventDetail, EventMap, SimpleEvent } from "../types";
 
-export type EventDetail<T extends object = object, V = any> = {
-    target: T;
-    property: (keyof T)[];
-    oldValue: V;
-    newValue: V;
-}
-
-export interface SimpleEvent<T extends object = object, V = any> {
-    type: string;
-    target: T;
-    change: Omit<EventDetail<T, V>, 'target'>;
-    readonly isDefaultPrevented: boolean;
-    readonly isStopPropagation: boolean;
-    preventDefault(): void;
-    stopPropagation(): void;
-}
-
-export type Callback<T extends object = object> = (event: SimpleEvent<T>) => void;
-
-export default class EventEmitter<E extends Record<string, any[]> = Record<string, any[]>> {
-    protected listeners = new Map<keyof E, Set<Callback<any>>>();
-    private pendingDispatchingEvent = new Set<Callback<any>>();
+export default class EventEmitter<E extends EventMap = EventMap> {
+    protected listeners = new Map<keyof E, Set<EventCallback<any>>>();
+    private pendingDispatchingEvent = new Set<EventCallback<any>>();
 
     /**
      * Subscribe to an event
      */
-    public on<K extends keyof E>(event: K, callback: Callback) {
+    public on<K extends keyof E>(event: K, callback: EventCallback) {
         let set = this.listeners.get(event);
         if (!set) {
             set = new Set();
@@ -41,7 +22,7 @@ export default class EventEmitter<E extends Record<string, any[]> = Record<strin
     /**
      * Unsubscribe from an event
      */
-    public off<K extends keyof E>(event: K, callback?: Callback | null) {
+    public off<K extends keyof E>(event: K, callback?: EventCallback | null) {
         const set = this.listeners.get(event);
         if (!set) return;
 

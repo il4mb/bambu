@@ -58,7 +58,7 @@ export default defineModel<'text'>({
             const target = this.trigger("find-root");
             if (target) {
                 target.data.text = undefined;
-                return this.owner.createNode("text", {
+                return this.manage.createNode("text", {
                     tagName: "span",
                     parent: target.id,
                     data: {

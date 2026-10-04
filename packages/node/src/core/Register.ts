@@ -1,4 +1,4 @@
-import Model from "./Model";
+import Model from "../Model";
 import { BuildinUnion } from "../models";
 import { ModelObject } from "../types/define";
 

@@ -1,9 +1,9 @@
-import { ComponentProps, Icon, ModelObject } from "../types/define";
-import type Register from "./Register";
+import { ComponentProps, Icon, ModelObject } from "./types/define";
+import type Register from "./core/Register";
 import Node from "./Node";
 import { createElement } from "react";
-import NodeManager from "./NodeManager";
-import { InferNodeCommands } from "../types";
+import NodeManager from "./core/NodeManager";
+import { InferNodeCommands } from "./types";
 
 /**
  * - **ID:** Kelas pengelola skema Model yang mendefinisikan perilaku, hierarki pewarisan (inheritance), command, dan komponen visual UI.
