@@ -1,6 +1,5 @@
 import { defineModel } from "../helper";
 import { DefineModel } from "../../types/define";
-import { createElement } from "react";
 
 declare global {
     interface ModelRegistry {

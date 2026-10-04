@@ -1,36 +1,5 @@
 import { JSX } from "react/jsx-runtime";
 import { CSSProperties } from "react";
-// import type { NodeData } from "./core/_Collector";
-
-export type Primitive =
-    | string
-    | number
-    | boolean
-    | bigint
-    | symbol
-    | null
-    | undefined;
-
-export type Unsupported =
-    | Element
-    | Function
-    | Date
-    | RegExp
-    | Map<any, any>
-    | Set<any>
-    | WeakMap<any, any>
-    | WeakSet<any>;
-
-export type ToPlain<T> =
-    T extends Primitive
-    ? T
-    : T extends Unsupported
-    ? never
-    : T extends object
-    ? {
-        [K in keyof T as ToPlain<T[K]> extends never ? never : K]?: ToPlain<T[K]>
-    }
-    : never;
 
 declare global {
     export interface ModelRegistry { }
@@ -45,6 +14,6 @@ declare global {
         tagName: keyof JSX.IntrinsicElements
         order: number;
         parent: string | null;
-        data: NodeDataOverridable;
+        data: Record<string, any>
     }
 }

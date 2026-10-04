@@ -1,25 +1,24 @@
 import { nanoid } from "nanoid";
-import Observable, { ObservableEventMap } from "./Observable";
-import Container from "./Container";
 import Model from "./Model";
 import { isNumber } from "lodash";
 import { createRef, JSX, RefObject } from "react";
-import NodeData from "./NodeData";
+import NodeData, { INodeData } from "./NodeData";
 import NodeManager from "./NodeManager";
-import EventEmitter from "./EventEmitter";
+import EventEmitter, { EventDetail, SimpleEvent } from "./EventEmitter";
+import { CreateEventMap, InferNodeData } from "../types";
 
 type NodeObjectWithElement = NodeObject & {
     element: HTMLElement | null
 };
-type NodeEventMap = ObservableEventMap<NodeObjectWithElement> & {
-    [K in keyof NodeObject['data'] & string as `change:data.${K}`]: [Event];
-}
+type Events<T extends ModuleName> = { change: [SimpleEvent] }
+    & CreateEventMap<NodeObjectWithElement, "change:">
+    & CreateEventMap<InferNodeData<T>, "change:data:">;
 
-export default class Node<T extends ModuleName = ModuleName> extends EventEmitter<NodeEventMap> {
+export default class Node<T extends ModuleName = ModuleName> extends EventEmitter<Events<T>> {
 
-    protected state: NodeObject;
+    readonly state: NodeObject;
     private readonly elementRef: RefObject<Element | null> = createRef();
-    readonly data: NodeData;
+    readonly data: INodeData<T>;
 
     constructor(
         public readonly owner: NodeManager,
@@ -39,7 +38,7 @@ export default class Node<T extends ModuleName = ModuleName> extends EventEmitte
             }
         }
 
-        this.data = new NodeData(this.state.data);
+        this.data = new NodeData(this, this.state.data as InferNodeData<T>) as INodeData<T>;
     }
 
     get id(): string {
@@ -86,24 +85,12 @@ export default class Node<T extends ModuleName = ModuleName> extends EventEmitte
             this.state[key] = newValue;
         }
 
-        let event = undefined;
-        for (const eventName of [`change:${key}`, "change"] as const) {
-            event = this.fire(eventName, { property: key, newValue, oldValue }, event);
-            if (event?.isDefaultPrevented) break;
-        }
-
-        if (event?.isStopPropagation === false) {
-            event = null;
-            for (const eventName of [`node:${this.id}:change:${key}`, `node:${this.id}:change`, `node:change:${key}`, "node:change"] as const) {
-                // @ts-ignore
-                event = this.owner.container.fire(eventName, { property: key, newValue, oldValue }, event);
-                if (event?.isDefaultPrevented) break;
-            }
-        }
+        const eventDetail = { target: this, property: [key], newValue, oldValue };
+        this.fire([`change:${key}`, "change"], eventDetail);
     }
 
     public typeOf(type: ModuleName): boolean {
-        let current = this.model;
+        let current = this.model as Model;
         while (current) {
             if (current.name === type) return true;
             if (!current.extends) break;
@@ -118,5 +105,22 @@ export default class Node<T extends ModuleName = ModuleName> extends EventEmitte
 
     public isAcceptable(target: Node): boolean {
         return this.model.isAcceptable(this, target);
+    }
+
+
+    public fire<K extends keyof Events<T>, O extends object = object, V = any>(events: K | K[], detail: EventDetail<O, V>): void {
+        super.fire(events, detail);
+
+        const prop = detail.property.join(":");
+        this.owner.container.fire(
+            // @ts-ignore
+            [
+                `node:${this.id}:change:${prop}`,
+                `node:${this.id}:change`,
+                `node:change:${prop}`,
+                "node:change"
+            ],
+            detail
+        );
     }
 }

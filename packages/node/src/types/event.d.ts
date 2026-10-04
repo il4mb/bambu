@@ -1,20 +1,7 @@
+import { SimpleEvent } from "../core/EventEmitter";
 
-import { PathValue, NestedKeys } from "./tools";
-
-export type BaseChanged<T> = {
-    path: (string | symbol)[];
-    value: T;
-    prev: T | null;
+export type CreateEventMap<O extends Record<string, any>, PREFIX extends string = ""> = {
+    [K in keyof O & string as `${PREFIX}${K}`]: [SimpleEvent];
 }
 
-export type ChangedEvent<T extends BaseChanged> = T & {
-    readonly isDefaultPrevented: boolean;
-    readonly isStopPropagation: boolean;
-    preventDefault(): void;
-    stopPropagation(): void;
-}
-
-export type ObjectChangeEventMap<O extends object> = {
-    [K in NestedKeys<O>]:
-    (event: ChangedEvent<{ path: string[], value: PathValue<O, K>, prev: PathValue<O, K> }>) => void;
-};
+export type EventMap<O extends Record<string, any> = Record<string, any>> = CreateEventMap<O>;

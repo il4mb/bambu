@@ -5,7 +5,7 @@ export default class StyleManager {
 
     private styleEl: HTMLStyleElement | null = null;
     constructor(readonly owner: Container) {
-        this.owner.on("change:data.style", () => this.render());
+        this.owner.on("node:change:element", () => this.render());
         this.owner.on("change:element", () => this.render());
     }
 

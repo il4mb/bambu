@@ -1,113 +1,133 @@
 import { isEqual } from "lodash";
 
-export type Callback = (event: SimpleEvent) => void;
-export type SimpleEvent = {
+export type EventDetail<T extends object = object, V = any> = {
+    target: T;
+    property: (keyof T)[];
+    oldValue: V;
+    newValue: V;
+}
+
+export interface SimpleEvent<T extends object = object, V = any> {
     type: string;
-    change: {
-        property: string;
-        oldValue: any;
-        newValue: any;
-    };
+    target: T;
+    change: Omit<EventDetail<T, V>, 'target'>;
     readonly isDefaultPrevented: boolean;
     readonly isStopPropagation: boolean;
-    defaultPrevented(): void;
+    preventDefault(): void;
     stopPropagation(): void;
 }
+
+export type Callback<T extends object = object> = (event: SimpleEvent<T>) => void;
+
 export default class EventEmitter<E extends Record<string, any[]> = Record<string, any[]>> {
-    protected listeners = new Map<keyof E, Set<Callback>>();
-    protected _updateDepth = 0;
-    protected readonly MAX_UPDATE_DEPTH = 50;
+    protected listeners = new Map<keyof E, Set<Callback<any>>>();
+    private pendingDispatchingEvent = new Set<Callback<any>>();
 
+    /**
+     * Subscribe to an event
+     */
     public on<K extends keyof E>(event: K, callback: Callback) {
-        const set = this.listeners.get(event) ?? new Set();
+        let set = this.listeners.get(event);
+        if (!set) {
+            set = new Set();
+            this.listeners.set(event, set);
+        }
         set.add(callback);
-        this.listeners.set(event, set);
-        return () => {
+
+        // Return a cleanup function
+        return () => this.off(event, callback);
+    }
+
+    /**
+     * Unsubscribe from an event
+     */
+    public off<K extends keyof E>(event: K, callback?: Callback | null) {
+        const set = this.listeners.get(event);
+        if (!set) return;
+
+        if (callback) {
             set.delete(callback);
-            if (set.size <= 0) {
-                this.listeners.delete(event);
-            } else {
-                this.listeners.set(event, set);
-            }
+        } else {
+            set.clear();
+        }
+
+        if (set.size === 0) {
+            this.listeners.delete(event);
         }
     }
 
-    public off<K extends keyof E>(event: K, callback: Callback | null = null) {
-        if (this.listeners.has(event)) {
-            const set = this.listeners.get(event)!;
-            if (callback) {
-                set.delete(callback);
-            } else {
-                set.clear();
+    /**
+     * Fire one or multiple events
+     */
+    public fire<K extends keyof E, T extends object = object, V = any>(events: K | K[], detail: EventDetail<T, V>) {
+
+        let isDefaultPrevented = false;
+        let isStopPropagation = false;
+
+        const { target, ...change } = detail;
+
+        const eventInstance: SimpleEvent<T, V> = {
+            type: String(events),
+            target,
+            change,
+            get isDefaultPrevented() {
+                return isDefaultPrevented;
+            },
+            get isStopPropagation() {
+                return isStopPropagation;
+            },
+            preventDefault() {
+                isDefaultPrevented = true;
+            },
+            stopPropagation() {
+                isStopPropagation = true;
             }
-            if (set.size <= 0) {
-                this.listeners.delete(event);
-            } else {
-                this.listeners.set(event, set);
+        };
+
+
+        if (Array.isArray(events)) {
+            for (const ev of events) {
+                this.dispatch(ev, eventInstance);
+                if (eventInstance.isStopPropagation) break;
             }
+            return;
         }
+
+        this.dispatch(events, eventInstance);
+        return;
     }
 
-    public fire<K extends keyof E>(
-        event: K,
-        detail: { property: string; oldValue: any; newValue: any; },
-        prevEvent?: SimpleEvent
-    ): SimpleEvent | undefined {
+    protected dispatch<K extends keyof E>(type: K, event: SimpleEvent<any, any>) {
 
-        if (isEqual(detail.oldValue, detail.newValue)) return;
-        if (this._updateDepth >= this.MAX_UPDATE_DEPTH) {
-            throw new Error(
-                `Infinite loop prevented! Maximum update depth (${this.MAX_UPDATE_DEPTH}) exceeded while setting "${String(event)}".`
-            );
-        }
+        const set = this.listeners.get(type);
+        if (!set) return;
 
-        this._updateDepth++;
-        try {
-            let isDefaultPrevented = prevEvent?.isDefaultPrevented ?? false;
-            let isStopPropagation = prevEvent?.isStopPropagation ?? false;
+        // Changed to for...of loop so we can break early if propagation is stopped
+        for (const callback of set) {
+            // Respect stopPropagation() called by a previous listener in this set
+            if (event.isStopPropagation) break;
 
-            const eventInstance = {
-                type: event,
-                change: detail,
-                get isDefaultPrevented() {
-                    return isDefaultPrevented;
-                },
-                get isStopPropagation() {
-                    return isStopPropagation;
-                },
-                defaultPrevented() {
-                    isDefaultPrevented = true;
-                },
-                stopPropagation() {
-                    isStopPropagation = true;
-                }
-            } as SimpleEvent;
-            this.dispatchEvent(eventInstance);
-            return eventInstance;
-        } finally {
-            this._updateDepth--;
-        }
-    }
-
-    private pendingDispatchingEvent = new Set<Callback>();
-    protected dispatchEvent(event: SimpleEvent) {
-        const key = event.type;
-        const set = this.listeners.get(key);
-
-        set?.forEach(callback => {
             if (!this.pendingDispatchingEvent.has(callback)) {
                 try {
                     this.pendingDispatchingEvent.add(callback);
                     callback(event);
                 } catch (e) {
-                    console.error(e);
+                    console.error(`Error in event listener for ${event.type}:`, e);
                 } finally {
                     this.pendingDispatchingEvent.delete(callback);
                 }
             }
-            //  else {
-            //     console.error("Skiped, Cannot invoke pending callback, to prevent infinite loop");
-            // }
-        });
+        }
+    }
+
+    static isEvent(object: any): object is SimpleEvent {
+        return object && typeof object == "object"
+            && "target" in object
+            && "type" in object
+            && "change" in object
+            && "isDefaultPrevented" in object
+            && "isStopPropagation" in object
+            && "preventDefault" in object
+            && "stopPropagation" in object;
     }
 }

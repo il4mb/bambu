@@ -1,10 +1,9 @@
 import { ComponentProps, Icon, ModelObject } from "../types/define";
-import type Container from "./Container";
 import type Register from "./Register";
 import Node from "./Node";
-import { InferCommands } from "../types/infer";
 import { createElement } from "react";
 import NodeManager from "./NodeManager";
+import { InferNodeCommands } from "../types";
 
 /**
  * - **ID:** Kelas pengelola skema Model yang mendefinisikan perilaku, hierarki pewarisan (inheritance), command, dan komponen visual UI.
@@ -65,13 +64,13 @@ export default class Model<T extends ModuleName = ModuleName> {
      * - **ID:** Daftar handler command yang didefinisikan pada model ini.
      * - **EN:** List of command handlers defined on this model.
      */
-    get commands(): InferCommands<T> {
+    get commands(): InferNodeCommands<T> {
         return Array.from(this.getLineage())
             .reverse()
             .reduce((commands, model) => ({
                 ...commands,
                 ...model.definition.commands
-            }), {} as InferCommands<T>);
+            }), {} as InferNodeCommands<T>);
     }
 
 

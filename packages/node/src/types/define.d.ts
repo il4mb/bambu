@@ -3,6 +3,7 @@ import type { FC, JSX, ReactNode, RefObject } from "react";
 import type { Model, Node } from "../core";
 import type { NormalizeFunction } from "./tools";
 import { Descriptor } from "./node-data";
+import { InferNodeData } from "./infer";
 
 // TOP TYPED DEFINE
 export type Command<T extends ModuleName> = (this: Node<T>, ...args: any[]) => any;
@@ -68,13 +69,13 @@ export type ModelObject<T extends ModuleName> = {
     ) & (
         ModelRegistry[T] extends { data: infer D extends Record<string, any> }
         ? {
-            default: Partial<NodeObject> & {
-                data: DataDescriptor<D & Partial<NodeDataOverridable>>;
+            default: Partial<Omit<NodeObject, 'data'>> & {
+                data: DataDescriptor<D & Partial<InferNodeData<T>>>;
             };
         }
         : {
-            default?: Partial<NodeObject> & {
-                data?: DataDescriptor<Partial<NodeDataOverridable>>
+            default?: Partial<Omit<NodeObject, 'data'>> & {
+                data?: DataDescriptor<Partial<InferNodeData<T>>>
             }
         }
     ) & (

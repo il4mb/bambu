@@ -3,7 +3,7 @@ import type Node from "./Node";
 import StyleManager from "./StyleManager";
 import EventEmitter from "./EventEmitter";
 import NodeManager from "./NodeManager";
-import { ShallowOptionalNode } from "../types/node";
+import { ShallowOptionalNode } from "../types";
 
 type Opts = {
     initialData: ShallowOptionalNode[]
@@ -40,7 +40,6 @@ export default class Container extends EventEmitter<ContainerEventMap> {
      */
     constructor(public register: Register, opts?: Opts) {
         super();
-
         this.nodeManager = new NodeManager(this, opts?.initialData);
         this.styleManager = new StyleManager(this);
     }
