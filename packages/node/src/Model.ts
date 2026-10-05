@@ -2,7 +2,7 @@ import { ComponentProps, Icon, ModelObject } from "./types/define";
 import type Register from "./core/Register";
 import Node from "./Node";
 import { createElement } from "react";
-import NodeManager from "./core/NodeManager";
+import NodeManager from "./libs/NodeManager";
 import { InferNodeCommands } from "./types";
 
 /**

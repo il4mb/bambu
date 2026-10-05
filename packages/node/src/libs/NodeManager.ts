@@ -2,7 +2,7 @@ import type Node from "../Node";
 import type Model from "../Model";
 import Container from "../Container";
 import { ShallowOptionalNode } from "../types/node";
-import EventEmitter from "./EventEmitter";
+import EventEmitter from "../core/EventEmitter";
 import { CreateEventMap } from "../types";
 
 type Event = CreateEventMap<'add' | 'remove' | 'update'>;

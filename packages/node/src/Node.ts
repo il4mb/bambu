@@ -1,9 +1,9 @@
 import { nanoid } from "nanoid";
 import Model from "./Model";
 import { isNumber } from "lodash";
-import { createRef, JSX, RefObject } from "react";
+import { createElement, createRef, JSX, ReactNode, RefObject } from "react";
 import NodeData from "./NodeData";
-import NodeManager from "./core/NodeManager";
+import NodeManager from "./libs/NodeManager";
 import EventEmitter from "./core/EventEmitter";
 import { AddPrefix, CreateEventMap, EventDetail, InferNodeData, INodeData } from "./types";
 
@@ -124,5 +124,21 @@ export default class Node<T extends ModuleName = ModuleName> extends EventEmitte
             ],
             detail
         );
+    }
+
+
+    public render(): ReactNode {
+        const setRef = (element: HTMLElement | null = null) => {
+            if (!element || element.nodeType === 1) {
+                this.set("element", element);
+            } else {
+                throw new Error("Ref must RefObject of HTMLElement");
+            }
+        }
+
+        const children = Array.from(this.children.values()).map(child => child.render());
+        const Component = this.model.component;
+        // @ts-ignore
+        return createElement(Component, { node: this, key: this.id, ref: (element) => setRef(element) }, children);
     }
 }

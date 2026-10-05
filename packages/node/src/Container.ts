@@ -1,8 +1,9 @@
 import Register from "./core/Register";
-import StyleManager from "./core/StyleManager";
+import StyleManager from "./libs/StyleManager";
 import EventEmitter from "./core/EventEmitter";
-import NodeManager from "./core/NodeManager";
+import NodeManager from "./libs/NodeManager";
 import { CreateEventMap, ShallowOptionalNode } from "./types";
+import { DeviceManager } from "./libs/DeviceManager";
 
 type Opts = {
     initialData: ShallowOptionalNode[];
@@ -20,8 +21,9 @@ type Events = CreateEventMap<
 export default class Container extends EventEmitter<Events> {
 
 
-    readonly nodeManager: NodeManager;
-    readonly styleManager: StyleManager;
+    readonly Devices: DeviceManager;
+    readonly Nodes: NodeManager;
+    readonly Styles: StyleManager;
 
     /**
      * @param register - **ID:** Registry penampung skema Model / **EN:** Model schema registry instance
@@ -29,7 +31,8 @@ export default class Container extends EventEmitter<Events> {
      */
     constructor(public register: Register, opts?: Opts) {
         super();
-        this.nodeManager = new NodeManager(this, opts?.initialData);
-        this.styleManager = new StyleManager(this);
+        this.Nodes = new NodeManager(this, opts?.initialData);
+        this.Styles = new StyleManager(this);
+        this.Devices = new DeviceManager(this);
     }
 }

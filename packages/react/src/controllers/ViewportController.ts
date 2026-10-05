@@ -1,4 +1,4 @@
-import { Container, createEvent, EventEmitter } from "@bambu/node";
+import { Container, EventEmitter } from "@bambu/node";
 import { createRef, RefObject } from "react";
 import _ from 'lodash';
 
@@ -28,42 +28,42 @@ export class ViewportController<D extends Devices = Devices> extends EventEmitte
             this.devices.set(key, initialDevices[key]);
         }
         const ids = this.devices.keys();
-        if (initialKey && Array.from(ids).includes(String(initialKey))) {
-            this.setDevice(initialKey);
-        } else {
-            this.setDevice(ids[0]);
-        }
+        // if (initialKey && Array.from(ids).includes(String(initialKey))) {
+        //     this.setDevice(initialKey);
+        // } else {
+        //     this.setDevice(ids[0]);
+        // }
 
     }
 
 
-    setDevice(id: keyof D & string) {
+    // setDevice(id: keyof D & string) {
 
-        const prev = this.devices.has(this._activeId) ? this.devices.get(this._activeId) : null;
-        const next = this.devices.has(id) ? this.devices.get(id) : null;
-        if (_.isEqual(prev, next)) return;
+    //     const prev = this.devices.has(this._activeId) ? this.devices.get(this._activeId) : null;
+    //     const next = this.devices.has(id) ? this.devices.get(id) : null;
+    //     if (_.isEqual(prev, next)) return;
 
-        this._activeId = id;
-        const event = createEvent({
-            path: ["device"],
-            value: next,
-            prev: prev
-        })
-        this.emitWith("device", (listeners) => {
-            for (const callback of listeners) {
-                callback(event);
-                if (event.isStopPropagation) break;
-            }
-        });
-        if (!event.isDefaultPrevented) {
-            this.container.emitWith("viewport:device", (listeners) => {
-                for (const callback of listeners) {
-                    callback(event);
-                    if (event.isStopPropagation) break;
-                }
-            });
-        }
-    }
+    //     this._activeId = id;
+    //     const event = createEvent({
+    //         path: ["device"],
+    //         value: next,
+    //         prev: prev
+    //     })
+    //     this.emitWith("device", (listeners) => {
+    //         for (const callback of listeners) {
+    //             callback(event);
+    //             if (event.isStopPropagation) break;
+    //         }
+    //     });
+    //     if (!event.isDefaultPrevented) {
+    //         this.container.emitWith("viewport:device", (listeners) => {
+    //             for (const callback of listeners) {
+    //                 callback(event);
+    //                 if (event.isStopPropagation) break;
+    //             }
+    //         });
+    //     }
+    // }
 
     get activeId() {
         return this._activeId;
