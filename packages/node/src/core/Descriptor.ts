@@ -1,18 +1,23 @@
 import NodeData from "../NodeData";
+import { EventDetail, SimpleEvent } from "../types";
 import { Observerable } from "./Observerable";
 export type Type = typeof Descriptor.SUPPORTED_TYPE[number];
 export type DescriptorState<T extends Type> = {
-    type: T | "unknown";
+    type: T;
     name: string;
     value: (T extends "unknown" ? any : T) | null;
+    renameable: boolean;
+    editable: boolean
 }
-export class Descriptor<T extends Type = "unknown"> extends Observerable<Descriptor<T>, DescriptorState<T>> {
+export class Descriptor<T extends Type = Type> extends Observerable<Descriptor<T>, DescriptorState<T>> {
     static SUPPORTED_TYPE = ["string", "number", "object", "boolean", "array", "unknown"] as const;
 
     state: DescriptorState<T> = {
-        type: "unknown",
+        type: "unknown" as T,
         name: "",
-        value: null
+        value: null,
+        renameable: true,
+        editable: true
     }
 
     constructor(protected data: NodeData, initial: Partial<DescriptorState<T>>) {
@@ -21,7 +26,6 @@ export class Descriptor<T extends Type = "unknown"> extends Observerable<Descrip
             ...this.state,
             ...initial
         }
-
     }
 
     get type() {
@@ -37,5 +41,18 @@ export class Descriptor<T extends Type = "unknown"> extends Observerable<Descrip
     }
 
 
+    get renameable() {
+        return this.state.renameable;
+    }
 
+    get editable() {
+        return this.state.editable;
+    }
+
+    public fire<K extends keyof DescriptorState<T>, O extends object = object, PV = any, V = PV>(events: K | K[], detail: EventDetail<O, PV, V>): SimpleEvent<O, PV, V> {
+        const event = super.fire(events, detail);
+        // @ts-ignore
+        this.data.fire([this.name, `${this.name}:${detail.property.join(":")}`], detail);
+        return event;
+    }
 }

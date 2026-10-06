@@ -114,9 +114,30 @@ export default class NodeManager extends EventEmitter<NodeManagerEvents> {
     }
 
     public cloneNode(node: Node, initial?: Partial<NodeObject>): Node {
+        const parent = node.parent;
+        const oldChildren = parent ? Array.from(parent.children.values()) : [];
+
         const cloned = node.model.buildNode(this, { ...node.state, ...initial, id: nanoid() });
         this.collection.set(cloned.id, cloned);
+
+        const newChildren = parent ? Array.from(this.getChildren(parent).values()) : [];
+        if (parent) {
+            parent.fire("children", { target: parent, property: ["children"], oldValue: oldChildren, newValue: newChildren, value: node })
+        }
         return cloned;
+    }
+
+    public deleteNode(node: Node) {
+        const parent = node.parent;
+        const oldChildren = parent ? Array.from(parent.children.values()) : [];
+
+        if (this.collection.has(node.id))
+            this.collection.delete(node.id);
+
+        const newChildren = parent ? Array.from(this.getChildren(parent).values()) : [];
+        if (parent) {
+            parent.fire("children", { target: parent, property: ["children"], oldValue: oldChildren, newValue: newChildren, value: node })
+        }
     }
 
     /**

@@ -26,42 +26,42 @@ export default defineModel<'list'>({
     },
 
     onCreated(node) {
-        const mapdescriptor = node.data.get("map");
-        const hasCurrentMap = Object.keys(mapdescriptor?.value || {}).length > 0;
-        const initialMapping: Record<string, string> = Object.fromEntries(Object.entries(node.data.items?.[0] || {}).map(([key]) => ([key, key])));
-        if (!hasCurrentMap) {
-            mapdescriptor?.set("value", initialMapping);
-        }
 
         const createDataItem = (index = 0) => {
+            const mapdescriptor = node.data.get("map");
+            const hasCurrentMap = Object.keys(mapdescriptor?.value || {}).length > 0;
+            const initialMapping: Record<string, string> = Object.fromEntries(Object.entries(node.data.items?.[0] || {}).map(([key]) => ([key, key])));
+            if (!hasCurrentMap) {
+                mapdescriptor?.set("value", initialMapping);
+            }
+
             const items = node.data.items || [];
             return Object.fromEntries(Object.entries(mapdescriptor?.value || {}).map(([from, target]) => {
                 return [target, items[index][from]]
             }))
         }
-        node.on("change:data:items", () => {
 
-        });
-        node.on("change:data:map", () => {
-
-        });
-        node.on("children:add", (e) => {
+        const updateList = () => {
+            const mapdescriptor = node.data.get("map");
+            const hasCurrentMap = Object.keys(mapdescriptor?.value || {}).length > 0;
+            const initialMapping: Record<string, string> = Object.fromEntries(Object.entries(node.data.items?.[0] || {}).map(([key]) => ([key, key])));
+            if (!hasCurrentMap) {
+                mapdescriptor?.set("value", initialMapping);
+            }
             const children = Array.from(node.children.values())[0];
             if (children) {
+                node.clearChildren();
                 const items = node.data.items || [];
-                for (let i = 1; i < items.length; i++) {
+                for (let i = 0; i < items.length; i++) {
                     children.clone({ data: createDataItem(i) });
                 }
-                Object.entries(mapdescriptor?.value || {}).forEach(([from, target]) => {
-                    // @ts-ignore
-                    children.data.set(target, items[0][from]);
-                });
             }
+        }
 
-        });
+        node.on("change:data:items", () => updateList());
+        node.on("change:data:map", () => updateList());
+        node.on("children:add", () => updateList());
 
-        node.manage.container.on("gesture:dragging", ()=> {
-            
-        })
+        updateList();
     },
 });

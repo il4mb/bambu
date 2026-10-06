@@ -1,5 +1,8 @@
 import { useCallback, useRef, useState } from "react";
-import CodeMirror, { ReactCodeMirrorRef, ViewUpdate } from "@uiw/react-codemirror";
+import CodeMirror, {
+    ReactCodeMirrorRef,
+    ViewUpdate,
+} from "@uiw/react-codemirror";
 import { json, jsonParseLinter } from "@codemirror/lang-json";
 import { useColorMode } from "@bambu/react";
 import { Box } from "@mui/material";
@@ -8,22 +11,21 @@ import { linter, lintGutter } from "@codemirror/lint";
 
 export interface JsonEditorProps {
     value: string;
+    onChange?: (val: string, viewUpdate: ViewUpdate) => void;
 }
 
-export default function JsonEditor({ value: initialValue }: JsonEditorProps) {
+export default function JsonEditor({
+    value: initialValue,
+    onChange,
+}: JsonEditorProps) {
     const codeMirrorRef = useRef<ReactCodeMirrorRef | null>(null);
     const isDarkMode = useColorMode();
-    const [value, setValue] = useState(initialValue);
-
-    const onChange = useCallback((val: string, viewUpdate: ViewUpdate) => {
-        setValue(val);
-    }, []);
 
     return (
         <Box
             component={CodeMirror}
             ref={codeMirrorRef}
-            value={value}
+            value={initialValue}
             width="100%"
             basicSetup={SETUP}
             theme={isDarkMode ? "dark" : "light"}

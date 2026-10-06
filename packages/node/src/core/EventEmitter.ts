@@ -40,15 +40,14 @@ export default class EventEmitter<E extends EventMap = EventMap> {
     /**
      * Fire one or multiple events
      */
-    public fire<K extends keyof E, T extends object = object, PV = any, V = PV>(events: K | K[], detail: EventDetail<T, PV, V>): SimpleEvent<T, PV, V> {
+    public fire<K extends keyof E, O extends object = object, PV = any, V = PV>(events: K | K[], detail: EventDetail<O, PV, V>): SimpleEvent<O, PV, V> {
 
         let isDefaultPrevented = false;
         let isStopPropagation = false;
 
         const { target, value, ...change } = detail;
-
-        const eventInstance: SimpleEvent<T, PV, V> = {
-            type: String(events),
+        let eventInstance: SimpleEvent<O, PV, V> = {
+            type: Array.isArray(events) ? String(events[0]) : String(events),
             target,
             change,
             value: (value ?? change.newValue) as any,
@@ -66,11 +65,10 @@ export default class EventEmitter<E extends EventMap = EventMap> {
             }
         };
 
-
         if (Array.isArray(events)) {
             for (const ev of events) {
-                this.dispatch(ev, eventInstance);
                 if (eventInstance.isStopPropagation) break;
+                this.dispatch(ev, eventInstance);
             }
             return eventInstance;
         }

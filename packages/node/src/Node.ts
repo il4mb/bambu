@@ -6,6 +6,7 @@ import NodeData from "./NodeData";
 import NodeManager from "./libs/NodeManager";
 import EventEmitter from "./core/EventEmitter";
 import { AddPrefixToKeys, CreateEventMap, EventDetail, InferNodeData, INodeData, SimpleEvent } from "./types";
+import NodeRenderer from "./NodeRenderer";
 
 type NodeObjectWithElement = NodeObject & {
     element: HTMLElement | null
@@ -35,6 +36,7 @@ export default class Node<T extends ModuleName = ModuleName> extends EventEmitte
             order: initial?.order && isNumber(initial.order) ? Number(initial.order) : 0,
             parent: initial?.parent || null,
             data: {
+                style: {},
                 ...this.model.default?.data,
                 ...initial?.data
             }
@@ -110,9 +112,9 @@ export default class Node<T extends ModuleName = ModuleName> extends EventEmitte
         return this.model.isAcceptable(this, target);
     }
 
-
     public fire<K extends keyof NodeEvents<T>, O extends object = object, PV = any, V = PV>(events: K | K[], detail: EventDetail<O, PV, V>): SimpleEvent<O, PV, V> {
         const event = super.fire(events, detail);
+
         if (!event.isDefaultPrevented) {
             const prop = detail.property.join(":");
             this.manage.fire(
@@ -135,18 +137,28 @@ export default class Node<T extends ModuleName = ModuleName> extends EventEmitte
             if (!element || element.nodeType === 1) {
                 this.set("element", element);
             } else {
-                throw new Error("Ref must RefObject of HTMLElement");
+                throw new Error("Ref must be RefObject of HTMLElement");
             }
         }
 
-        const children = Array.from(this.children.values()).map(child => child.render());
-        const Component = this.model.component;
-        // @ts-ignore
-        return createElement(Component, { node: this, key: this.id, ref: (element) => setRef(element) }, children);
+        // Return the reactive wrapper component!
+        return createElement(NodeRenderer, {
+            key: this.id,
+            node: this,
+            ref: (element: HTMLElement | null) => setRef(element)
+        });
     }
 
 
     public clone(initial?: Partial<NodeObject>) {
         return this.manage.cloneNode(this, initial);
+    }
+
+    public delete() {
+        this.manage.deleteNode(this);
+    }
+
+    public clearChildren() {
+        this.children.forEach(child => child.delete());
     }
 }

@@ -1,8 +1,9 @@
-import { Box, MenuItem, Stack, TextField } from "@mui/material";
+import { Box, TextField } from "@mui/material";
 import { Window } from "@bambu/react";
 import { Descriptor } from "@bambu/node";
-import { useEffect, useState } from "react";
+import { ChangeEvent, useCallback, useEffect, useState } from "react";
 import JsonEditor from "@/editors/JsonEditor";
+import { ViewUpdate } from "@uiw/react-codemirror";
 
 export interface VarWindowProps {
     open?: {
@@ -14,18 +15,25 @@ export interface VarWindowProps {
 export default function VarWindow({ open = null, onClose }: VarWindowProps) {
     const [data, setData] = useState<Descriptor | null>(null);
 
-    const updateData = (key: string, value: any) => {
+    const handleNameChange = (event: ChangeEvent<HTMLInputElement>) => {
         if (!data) return;
-        setData({ ...data, [key]: value });
+        data.set("name", event.target.value);
     };
+    const handleValueChange = useCallback(
+        (value: string, view: ViewUpdate) => {
+            if (!data) return;
+            if (data.type === "object" || data.type === "array") {
+                data.set("value", JSON.parse(value));
+                return;
+            }
+            data.set("value", value);
+        },
+        [data],
+    );
 
     useEffect(() => {
-        if (open) {
-            setData(open.item);
-            console.log(open.item);
-        } else {
-            setData(null);
-        }
+        if (open) setData(open.item);
+        else setData(null);
     }, [open]);
 
     if (!open || !data) return null;
@@ -39,16 +47,13 @@ export default function VarWindow({ open = null, onClose }: VarWindowProps) {
             onClose={onClose}
             minSize={{ width: 550, height: 350 }}
             initialSize={{ width: 550, height: 350 }}
-            anchorOffset={{
-                x: -500,
-                y: -50,
-            }}
+            anchorOffset={{ x: -500, y: -50 }}
         >
             <Box sx={{ p: 1.4 }}>
                 <TextField
                     disabled={data.renameable === false}
                     value={data?.name}
-                    onChange={(e) => updateData("name", e.target.value)}
+                    onChange={handleNameChange}
                     fullWidth
                     label="Name"
                     variant="outlined"
@@ -62,7 +67,10 @@ export default function VarWindow({ open = null, onClose }: VarWindowProps) {
                     overflow: "hidden",
                 }}
             >
-                <JsonEditor value={JSON.stringify(data.value, null, 2)} />
+                <JsonEditor
+                    value={JSON.stringify(data.value, null, 2)}
+                    onChange={handleValueChange}
+                />
             </Box>
         </Window>
     );

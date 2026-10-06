@@ -90,21 +90,21 @@ export default class NodeData<
         if (newValue instanceof Descriptor) {
             // @ts-ignore Apply state change
             this.descriptors.set(key, newValue);
+
+            const eventDetail = { target: this, property: [String(key)], oldValue, newValue };
+            // @ts-ignore
+            this.fire(["change", `change:${String(key)}`], eventDetail);
+
         } else {
             const oldDescVal = oldValue?.value;
             if (isEqual(oldDescVal, newValue)) return;
             const newDescriptor = this.createItem(String(key), newValue);
             this.descriptors.set(String(key), newDescriptor);
 
-            const eventDetail = { target: this, property: [String(key)], oldValue, newValue: newDescriptor };
-            // @ts-ignore
-            this.fire(["change", `change:${String(key)}`], eventDetail);
-            return;
+            // const eventDetail = { target: this, property: [String(key)], oldValue, newValue: newDescriptor };
+            // // @ts-ignore
+            // this.fire(["change", `change:${String(key)}`], eventDetail);
         }
-
-        const eventDetail = { target: this, property: [String(key)], oldValue, newValue };
-        // @ts-ignore
-        this.fire(["change", `change:${String(key)}`], eventDetail);
     }
 
     public get<K extends keyof O>(key: K): Descriptor | undefined {
@@ -113,10 +113,9 @@ export default class NodeData<
 
     public fire<K extends keyof Events<T>, O extends object = object, PV = any, V = PV>(events: K | K[], detail: EventDetail<O, PV, V>): SimpleEvent<O, PV, V> {
         const event = super.fire(events, detail);
-
         if (!event.isDefaultPrevented) {
             // @ts-ignore
-            this.node.fire(['change', 'change:data', `change:data:${detail.property.join(":")}`], detail);
+            this.node.fire(`change:data:${event.type}`, detail);
         }
         return event;
     }
