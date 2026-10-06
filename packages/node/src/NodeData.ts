@@ -1,36 +1,36 @@
 import { isEqual } from "lodash";
-import { AddPrefix, CreateEventMap, EventDetail, InferNodeData } from "./types";
+import { AddPrefix, CreateEventMap, EventDetail, InferNodeData, SimpleEvent } from "./types";
 import EventEmitter from "./core/EventEmitter";
 import Node from "./Node";
+import { Descriptor, Type } from "./core/Descriptor";
 
 const TYPE_DATA = ["string", "number", "object", "boolean", "array", "unknown", "binding"] as const;
-type TypeName = typeof TYPE_DATA[number];
-type Descriptor = {
-    name: string;
-    value: any;
-    type: TypeName;
-
-}
 type TNodeDataDescriptor<T extends ModuleName> = {
     [K in keyof InferNodeData<T>]: Descriptor
 }
-type Events<T extends ModuleName> = CreateEventMap<'change'| AddPrefix<"change:", keyof InferNodeData<T> & string>>;
+
+type Events<T extends ModuleName> = CreateEventMap<
+    NodeData,
+    'change' | AddPrefix<"change:", keyof InferNodeData<T> & string>
+>;
+
+
 
 export default class NodeData<
-    T extends ModuleName,
+    T extends ModuleName = ModuleName,
     O extends Record<string, Descriptor> = TNodeDataDescriptor<T>
 > extends EventEmitter<Events<T>> {
 
     // Allow TypeScript to recognize dynamic dot-notation properties
     [key: string]: any;
 
-    protected state: O;
+    protected descriptors: Map<string, Descriptor>;
 
     constructor(protected node: Node<T>, initial: InferNodeData<T>) {
         super();
-        this.state = Object.fromEntries(Object.entries(initial).map(([key, value]) => {
+        this.descriptors = new Map(Object.entries(initial).map(([key, value]) => {
             return [key, this.createItem(key, value)];
-        })) as O;
+        }));
 
         return new Proxy(this, {
             get: (target, prop) => {
@@ -45,8 +45,8 @@ export default class NodeData<
                 }
 
                 // Extract the actual value from the descriptor
-                if (typeof prop === "string" && target.state[prop]) {
-                    return target.state[prop].value;
+                if (typeof prop === "string" && target.descriptors.has(String(prop))) {
+                    return target.descriptors.get(String(prop))!.value;
                 }
 
                 return undefined;
@@ -58,57 +58,71 @@ export default class NodeData<
                 }
 
                 if (typeof prop === "string") {
-                    const existingItem = target.state[prop];
-                    if (existingItem && existingItem.type === "binding") {
-                        return true;
-                    }
-
-                    // Create new descriptor and push through Observable
+                    // const existingItem = target.descriptors.get(String(prop));
+                    // if (existingItem && existingItem.type === "binding") {
+                    //     return true;
+                    // }
                     const newDescriptor = target.createItem(prop, value);
-
                     target.set(prop, newDescriptor);
-
                     return true;
                 }
-
                 return false;
             }
         });
     }
 
-    createItem(name: string, value: any): Descriptor {
-        let type: TypeName = "unknown";
-
-        // 7. Fix JS typeof quirk: typeof [] is "object"
+    private createItem(name: string, value: any): Descriptor {
+        let type: Type = "unknown";
         if (Array.isArray(value)) {
             type = "array";
         } else if (TYPE_DATA.includes(typeof value as any)) {
-            type = typeof value as TypeName;
+            type = typeof value as Type;
         }
 
-        return { name, value, type };
+        return new Descriptor(this, { name, type, value });
     }
 
 
-    public set<K extends keyof O>(key: K, newValue: Descriptor): void {
-        const oldValue = this.state[key];
+    public set<K extends keyof O>(key: K, newValue: Descriptor | O[K]): void {
+        const oldValue = this.descriptors.get(String(key));
         if (isEqual(oldValue, newValue)) return;
 
-        // @ts-ignore Apply state change
-        this.state[key] = newValue;
+        if (newValue instanceof Descriptor) {
+            // @ts-ignore Apply state change
+            this.descriptors.set(key, newValue);
+        } else {
+            const oldDescVal = oldValue?.value;
+            if (isEqual(oldDescVal, newValue)) return;
+            const newDescriptor = this.createItem(String(key), newValue);
+            this.descriptors.set(String(key), newDescriptor);
+
+            const eventDetail = { target: this, property: [String(key)], oldValue, newValue: newDescriptor };
+            // @ts-ignore
+            this.fire(["change", `change:${String(key)}`], eventDetail);
+            return;
+        }
 
         const eventDetail = { target: this, property: [String(key)], oldValue, newValue };
         // @ts-ignore
         this.fire(["change", `change:${String(key)}`], eventDetail);
     }
 
-    public get<K extends keyof O>(key: K): Descriptor {
-        return this.state[key];
+    public get<K extends keyof O>(key: K): Descriptor | undefined {
+        return this.descriptors.get(String(key));
     }
 
-    public fire<K extends keyof Events<T>, O extends object = object, V = any>(events: K | K[], detail: EventDetail<O, V>) {
-        super.fire(events, detail);
-        // @ts-ignore
-        this.node.fire(['change', 'change:data', `change:data:${detail.property.join(":")}`], detail);
+    public fire<K extends keyof Events<T>, O extends object = object, PV = any, V = PV>(events: K | K[], detail: EventDetail<O, PV, V>): SimpleEvent<O, PV, V> {
+        const event = super.fire(events, detail);
+
+        if (!event.isDefaultPrevented) {
+            // @ts-ignore
+            this.node.fire(['change', 'change:data', `change:data:${detail.property.join(":")}`], detail);
+        }
+        return event;
     }
+
+    all() {
+        return Array.from(this.descriptors.values());
+    }
+
 }

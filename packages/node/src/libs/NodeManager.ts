@@ -1,17 +1,27 @@
-import type Node from "../Node";
+import Node from "../Node";
 import type Model from "../Model";
 import Container from "../Container";
 import { ShallowOptionalNode } from "../types/node";
 import EventEmitter from "../core/EventEmitter";
 import { CreateEventMap } from "../types";
+import { nanoid } from "nanoid";
 
-type Event = CreateEventMap<'add' | 'remove' | 'update'>;
+type NodeEvents = "node:change" | `node:change:${string}` | `node:${string}:change` | `node:${string}:change:${string}`;
+type NodeManagerEvents = CreateEventMap<NodeManager, {
+    [K in NodeEvents]: Node;
+}>;
+
+declare global {
+    interface EventRegistry {
+        NodeManager: NodeManagerEvents
+    }
+}
 
 /**
  * **ID:** Kelas Container utama yang mengelola seluruh pohon node (tree structure) dan siklus hidup node dalam dokumen.
  * **EN:** Primary Container class managing the entire node tree structure and lifecycle within a document.
  */
-export default class NodeManager extends EventEmitter<Event> {
+export default class NodeManager extends EventEmitter<NodeManagerEvents> {
 
     /** **ID:** Inkremen fraksional terkecil untuk pengurutan node / **EN:** Smallest fractional increment for node ordering */
     static ORDER_EPS = 0.001;
@@ -103,6 +113,12 @@ export default class NodeManager extends EventEmitter<Event> {
         return node;
     }
 
+    public cloneNode(node: Node, initial?: Partial<NodeObject>): Node {
+        const cloned = node.model.buildNode(this, { ...node.state, ...initial, id: nanoid() });
+        this.collection.set(cloned.id, cloned);
+        return cloned;
+    }
+
     /**
      * **ID:** Mencari node berdasarkan ID uniknya di dalam container.
      * **EN:** Searches for a node by its unique ID within the container.
@@ -125,33 +141,47 @@ export default class NodeManager extends EventEmitter<Event> {
      */
     public addNodeChildren(parent: Node<any>, node: Node<any>, at?: number) {
         this.ensureOwner(parent, node);
-        const children = this.getChildren(parent); // Map<string, Node>
-        const entries = Array.from(children.values()).sort((a, b) => a.order - b.order);
+
+        // Snapshot the PREVIOUS sequence.
+        // Use spread syntax [...] so .sort() does not mutate the Map's iterator directly.
+        const prevChildren = [...this.getChildren(parent).values()].sort((a, b) => a.order - b.order);
 
         if (at === undefined || at === null) {
             // Append: set order after last existing child
-            node.set("order", entries.length > 0 ? entries[entries.length - 1].order + NodeManager.ORDER_EPS : 0);
+            node.set("order", prevChildren.length > 0 ? prevChildren[prevChildren.length - 1].order + NodeManager.ORDER_EPS : 0);
         } else {
-            const targetIndex = Math.max(0, Math.min(Math.floor(at), entries.length));
+            const targetIndex = Math.max(0, Math.min(Math.floor(at), prevChildren.length));
 
             if (targetIndex === 0) {
                 // Insert at beginning
-                const firstOrder = entries.length > 0 ? entries[0].order : 0;
+                const firstOrder = prevChildren.length > 0 ? prevChildren[0].order : 0;
                 node.set("order", firstOrder - NodeManager.ORDER_EPS);
-            } else if (targetIndex >= entries.length) {
+            } else if (targetIndex >= prevChildren.length) {
                 // Insert at end
-                const lastOrder = entries.length > 0 ? entries[entries.length - 1].order : 0;
+                const lastOrder = prevChildren.length > 0 ? prevChildren[prevChildren.length - 1].order : 0;
                 node.set("order", lastOrder + NodeManager.ORDER_EPS);
             } else {
                 // Insert between two nodes
-                const prevOrder = entries[targetIndex - 1].order;
-                const nextOrder = entries[targetIndex].order;
+                const prevOrder = prevChildren[targetIndex - 1].order;
+                const nextOrder = prevChildren[targetIndex].order;
                 node.set("order", (prevOrder + nextOrder) / 2); // Fractional average
             }
         }
 
         node.set("parent", parent.id);
         this.normalizeChildrenOrder(parent);
+
+        // Snapshot the NEW sequence.
+        // Must sort again so the UI/EventEmitter knows the structural sequence actually changed.
+        const newChildren = [...this.getChildren(parent).values()].sort((a, b) => a.order - b.order);
+
+        parent.fire("children:add", {
+            target: parent,
+            property: ["children"],
+            oldValue: prevChildren,
+            newValue: newChildren,
+            value: node
+        });
     }
 
     /**

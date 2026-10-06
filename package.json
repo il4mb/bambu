@@ -7,7 +7,7 @@
     "scripts": {
         "dev:ts": "bun run --hot ./packages/dev/index.ts",
         "dev:scss": "npx sass ./packages/dev/src/theme/theme.scss ./packages/dev/src/theme/theme.css --watch",
-        "dev": "bun run dev:ts & bun run dev:scss"
+        "dev": "bun run dev:ts"
     },
     "dependencies": {
         "chroma-js": "^3.2.0",

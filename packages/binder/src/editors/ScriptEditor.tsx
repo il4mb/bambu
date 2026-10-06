@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import CodeMirror, { BasicSetupOptions, ViewUpdate } from "@uiw/react-codemirror";
 import { json } from "@codemirror/lang-json";
-import { useIsDarkMode } from "@bambu/react";
+import { useColorMode } from "@bambu/react";
 import { Box } from "@mui/material";
 
 const setup: BasicSetupOptions = {
@@ -29,7 +29,7 @@ export interface ScriptEditorProps {
     value: string;
 }
 export default function ScriptEditor({ value: initialValue }: ScriptEditorProps) {
-    const isDarkMode = useIsDarkMode();
+    const isDarkMode = useColorMode();
     const [value, setValue] = useState(initialValue);
     const onChange = useCallback((val: string, viewUpdate: ViewUpdate) => {
         setValue(val);

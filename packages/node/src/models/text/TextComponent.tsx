@@ -7,7 +7,7 @@ export default function TextComponent({ ref, node, children }: ComponentProps<"t
         return comp && comp !== TextComponent ? comp : undefined;
     });
 
-    const content = Children.count(children) > 0 ? children : JSON.stringify(node.data?.text ?? "Binding");
+    const content = Children.count(children) > 0 ? children : String(node.data?.text)
 
     if (ParentComponent) {
         return (

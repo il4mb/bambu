@@ -1,4 +1,8 @@
-import { Container, createEvent, EventEmitter, Node, ObjectChangeEventMap, reactive } from "@bambu/node";
+import Container from "../Container";
+import { Observerable } from "../core";
+import Node from "../Node";
+import { AddPrefixToKeys, CreateEventMap, EventDetail, SimpleEvent } from "../types";
+import NodeManager from "./NodeManager";
 
 export type Pointer = { x: number, y: number }
 export type DropPosition = "after" | "before" | "inside";
@@ -18,69 +22,56 @@ export type GestureState = {
     selecting: Node[];
     draggingData: DragingData | null;
 }
-export type GestureEventMap = ObjectChangeEventMap<GestureState>;
 
-export class GestureController extends EventEmitter<GestureEventMap> {
+export class GestureManager extends Observerable<GestureManager, GestureState> {
 
-    protected mapping: {};
-    public readonly state: GestureState;
+    public readonly state: GestureState = {
+        pressed: false,
+        dragging: false,
+        pointer: { x: 0, y: 0 },
+        pressPointer: { x: 0, y: 0 },
+        hovering: [],
+        selecting: [],
+        draggingData: null
+    }
+    protected nm: NodeManager;
 
     constructor(protected container: Container) {
 
         super();
-        this.state = reactive({
-            pressed: false,
-            dragging: false,
-            pointer: { x: 0, y: 0 },
-            pressPointer: { x: 0, y: 0 },
-            hovering: [],
-            selecting: [],
-            draggingData: null
-        }, change => {
-            const event = createEvent({
-                path: [...change.path, change.property],
-                value: change.value,
-                prev: change.oldValue
-            });
-            // @ts-ignore
-            this.emitWith(event.path.join("."), listeners => {
-                for (const callback of listeners) {
-                    // @ts-ignore
-                    callback(event);
-                    if (event.isStopPropagation) break;
-                }
-            });
-        });
+        this.nm = container.Nodes;
 
         const onMouseLeave = (e: MouseEvent) => this.onMouseLeave(e);
         const onMouseDown = (e: MouseEvent) => this.onMouseDown(e);
         const onMouseUp = (e: MouseEvent) => this.onMouseUp(e);
         const onMouseMove = (e: MouseEvent) => this.onMouseMove(e);
 
-        const applyListeners = (element: HTMLElement, attach = true) => {
-            // console.log(element)
-            if (attach) {
-                element?.addEventListener("mouseleave", onMouseLeave);
-                element?.addEventListener("mousedown", onMouseDown, true);
-                element?.addEventListener("mouseup", onMouseUp, true);
-                element?.addEventListener("mousemove", onMouseMove, true);
-            } else {
-                element?.removeEventListener("mouseleave", onMouseLeave);
-                element?.removeEventListener("mousedown", onMouseDown, true);
-                element?.removeEventListener("mouseup", onMouseUp, true);
-                element?.removeEventListener("mousemove", onMouseMove, true);
-            }
+        let bodyElement = this.nm.body.element as HTMLElement | null;
+        const applyListeners = () => {
+            bodyElement?.addEventListener("mouseleave", onMouseLeave);
+            bodyElement?.addEventListener("mousedown", onMouseDown, true);
+            bodyElement?.addEventListener("mouseup", onMouseUp, true);
+            bodyElement?.addEventListener("mousemove", onMouseMove, true);
+        }
+        const removeListener = () => {
+            bodyElement?.removeEventListener("mouseleave", onMouseLeave);
+            bodyElement?.removeEventListener("mousedown", onMouseDown, true);
+            bodyElement?.removeEventListener("mouseup", onMouseUp, true);
+            bodyElement?.removeEventListener("mousemove", onMouseMove, true);
         }
 
-        applyListeners(container.body.element as HTMLElement);
-        container.body.on("element", (event) => {
-            if (event.prev) applyListeners(event.prev as HTMLElement, false);
-            applyListeners(event.value as HTMLElement, true);
+        applyListeners();
+        this.nm.body.on("change:element", ({ value }) => {
+            removeListener();
+            if (value) {
+                bodyElement = value;
+                applyListeners();
+            }
         });
     }
 
     get document() {
-        return this.container.body.element?.ownerDocument;
+        return this.nm.body.element?.ownerDocument;
     }
     get isPressed() {
         return this.state.pressed;
@@ -113,14 +104,14 @@ export class GestureController extends EventEmitter<GestureEventMap> {
         const node = this.findAncestorNode(target);
         if (!node) {
             if (!e.ctrlKey && !e.metaKey) {
-                this.state.selecting = [];
+                this.set("selecting", []);
             }
             return;
         }
 
         const multiSelect = e.ctrlKey || e.metaKey;
         if (!multiSelect) {
-            this.state.selecting = [node];
+            this.set("selecting", [node]);
             return;
         }
 
@@ -128,16 +119,16 @@ export class GestureController extends EventEmitter<GestureEventMap> {
             n => n.id === node.id
         );
         if (exists) {
-            this.state.selecting = this.getRootAncestors(
+            this.set("selecting", this.getRootAncestors(
                 this.state.selecting.filter(
                     n => n.id !== node.id
                 )
-            );
+            ));
         } else {
-            this.state.selecting = this.getRootAncestors([
+            this.set("selecting", this.getRootAncestors([
                 ...this.state.selecting,
                 node
-            ]);
+            ]));
         }
     }
 
@@ -145,44 +136,41 @@ export class GestureController extends EventEmitter<GestureEventMap> {
         if (this.isDragging) {
             console.log("Cleanup Dragging");
         }
-        this.state.pressed = false;
-        this.state.dragging = false;
+        this.set({ pressed: false, dragging: false });
     }
 
     protected onMouseMove(e: MouseEvent) {
-        this.state.pointer = { x: e.clientX, y: e.clientY };
+        this.set("pointer", { x: e.clientX, y: e.clientY });
 
         if (!this.isPressed) {
-            let focus = this.document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
+            let focus = this.document?.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
             let focusNode = null;
 
-            while (focus && focus !== this.document.body) {
+            while (focus && focus !== this.document?.body) {
                 focusNode = this.findByElement(focus);
                 if (focusNode) break;
                 focus = focus.parentElement;
             }
 
-            this.state.hovering = focusNode && !this.state.selecting.includes(focusNode)
-                ? [focusNode]
-                : [];
+            this.set("hovering", focusNode && !this.state.selecting.includes(focusNode) ? [focusNode] : []);
             return;
         }
 
-        this.state.hovering = [];
+        this.set("hovering", []);
         const dx = e.clientX - this.state.pressPointer.x;
         const dy = e.clientY - this.state.pressPointer.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
         if (!this.isDragging && distance > 4) {
-            this.state.dragging = true;
+            this.set("dragging", true);
             this.clearTextSelection();
         }
 
         if (this.isDragging) {
-            let focus = this.document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
+            let focus = this.document?.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
             let focusNode: any = null;
 
-            while (focus && focus !== this.document.body) {
+            while (focus && focus !== this.document?.body) {
                 focusNode = this.findByElement(focus);
                 if (focusNode) break;
                 focus = focus.parentElement;
@@ -289,14 +277,14 @@ export class GestureController extends EventEmitter<GestureEventMap> {
                         });
 
                         if (finalNodes.length > 0) {
-                            this.state.draggingData = {
+                            this.set("draggingData", {
                                 target: focusNode,
                                 nodes: finalNodes,
                                 position: position,
                                 layout: layout
-                            };
+                            });
                         } else {
-                            this.state.draggingData = null; // Clears the UI highlight if no nodes are valid
+                            this.set("draggingData", null) // Clears the UI highlight if no nodes are valid
                         }
                     }
                 }
@@ -338,7 +326,7 @@ export class GestureController extends EventEmitter<GestureEventMap> {
     }
 
     public findByElement(element: Element) {
-        const arrayNodes = Array.from(this.container.nodes.values());
+        const arrayNodes = Array.from(this.nm.nodes.values());
         return arrayNodes.find(n => n.element === element);;
     }
 
@@ -362,5 +350,16 @@ export class GestureController extends EventEmitter<GestureEventMap> {
             layout = xDiff > yDiff ? "horizontal" : "vertical";
         }
         return layout as WrapperLayout;
+    }
+
+
+    public fire<K extends keyof GestureState, T extends object = object, PV = any, V = PV>(events: K | K[], detail: EventDetail<T, PV, V>): SimpleEvent<T, PV, V> {
+        const event = super.fire(events, detail);
+
+        if (!event.isDefaultPrevented) {
+            // @ts-ignore
+            this.container.fire(`gesture:${detail.property.join(":")}`, detail);
+        }
+        return event;
     }
 }

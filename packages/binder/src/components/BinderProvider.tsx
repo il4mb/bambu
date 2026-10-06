@@ -1,7 +1,6 @@
 import { createContext, useContext, ReactNode, useMemo, useEffect } from "react";
 import { BinderController } from "../BinderController";
 import { useContainer } from "@bambu/react";
-import { Node } from "@bambu/node";
 
 const BinderProviderContext = createContext<BinderController | undefined>(undefined);
 
@@ -13,11 +12,11 @@ export const BinderProvider = ({ children }: BinderProviderProps) => {
     const controller = useMemo(() => new BinderController(container), []);
 
     useEffect(() => {
-        return controller.on("node:event", (event: { node: Node; value: string }) => {
-            const { node, value } = event;
+        return controller.on("node:event", (event) => {
+            // const { node, value } = event;
             // Handle the event as needed
             
-            console.log(`Event fired on node ${node.id}:  ${value}`);
+            // console.log(`Event fired on node ${node.id}:  ${value}`);
         });
     }, [controller]);
 

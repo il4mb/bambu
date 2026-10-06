@@ -1,11 +1,11 @@
+import { useContainer } from "@/contexts";
 import { Node } from "@bambu/node";
 import { useEffect, useMemo, useState } from "react";
-import { useGestureController } from "../contexts/GestureProvider";
 
 export interface Props {}
 
 export default function SelectingSpot({}: Props) {
-    const gesture = useGestureController();
+    const { Gesture } = useContainer();
     const [nodes, setNodes] = useState<Node[]>([]);
 
     const rects = useMemo<DOMRectList[]>(() => {
@@ -45,11 +45,11 @@ export default function SelectingSpot({}: Props) {
     }, [rects]);
 
     useEffect(() => {
-        if (!gesture) return;
-        return gesture.on('selecting', (e) => {
+        return Gesture.on("selecting", (e) => {
+            console.log(e);
             setNodes(e.value);
         });
-    }, [gesture]);
+    }, []);
 
     return (
         <svg

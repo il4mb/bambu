@@ -5,18 +5,18 @@ import { createElement, createRef, JSX, ReactNode, RefObject } from "react";
 import NodeData from "./NodeData";
 import NodeManager from "./libs/NodeManager";
 import EventEmitter from "./core/EventEmitter";
-import { AddPrefix, CreateEventMap, EventDetail, InferNodeData, INodeData } from "./types";
+import { AddPrefixToKeys, CreateEventMap, EventDetail, InferNodeData, INodeData, SimpleEvent } from "./types";
 
 type NodeObjectWithElement = NodeObject & {
     element: HTMLElement | null
 };
-type Events<T extends ModuleName> = CreateEventMap<
-    'change'
-    | AddPrefix<'change:', keyof NodeObjectWithElement>
-    | AddPrefix<'change:data:', keyof InferNodeData<T> & string>
->;
+type NodeEvents<T extends ModuleName> = CreateEventMap<Node, { change: Node, }
+    & AddPrefixToKeys<'change:', NodeObjectWithElement>
+    & AddPrefixToKeys<'change:data:', InferNodeData<T>>
+    & { children: Node[] }
+    & AddPrefixToKeys<'children:', { add: { value: Node, propValue: Node[] }, remove: { value: Node, propValue: Node[] } }>>
 
-export default class Node<T extends ModuleName = ModuleName> extends EventEmitter<Events<T>> {
+export default class Node<T extends ModuleName = ModuleName> extends EventEmitter<NodeEvents<T>> {
 
     readonly state: NodeObject;
     private readonly elementRef: RefObject<Element | null> = createRef();
@@ -110,20 +110,23 @@ export default class Node<T extends ModuleName = ModuleName> extends EventEmitte
         return this.model.isAcceptable(this, target);
     }
 
-    public fire<K extends keyof Events<T>, O extends object = object, V = any>(events: K | K[], detail: EventDetail<O, V>): void {
-        super.fire(events, detail);
 
-        const prop = detail.property.join(":");
-        this.manage.fire(
-            // @ts-ignore
-            [
-                `node:${this.id}:change:${prop}`,
-                `node:${this.id}:change`,
-                `node:change:${prop}`,
-                "node:change"
-            ],
-            detail
-        );
+    public fire<K extends keyof NodeEvents<T>, O extends object = object, PV = any, V = PV>(events: K | K[], detail: EventDetail<O, PV, V>): SimpleEvent<O, PV, V> {
+        const event = super.fire(events, detail);
+        if (!event.isDefaultPrevented) {
+            const prop = detail.property.join(":");
+            this.manage.fire(
+                [
+                    `node:${this.id}:change:${prop}`,
+                    `node:${this.id}:change`,
+                    `node:change:${prop}`,
+                    "node:change"
+                ],
+                detail
+            );
+        }
+
+        return event;
     }
 
 
@@ -140,5 +143,10 @@ export default class Node<T extends ModuleName = ModuleName> extends EventEmitte
         const Component = this.model.component;
         // @ts-ignore
         return createElement(Component, { node: this, key: this.id, ref: (element) => setRef(element) }, children);
+    }
+
+
+    public clone(initial?: Partial<NodeObject>) {
+        return this.manage.cloneNode(this, initial);
     }
 }

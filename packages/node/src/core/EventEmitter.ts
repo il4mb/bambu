@@ -7,7 +7,7 @@ export default class EventEmitter<E extends EventMap = EventMap> {
     /**
      * Subscribe to an event
      */
-    public on<K extends keyof E>(event: K, callback: EventCallback) {
+    public on<K extends keyof E>(event: K, callback: EventCallback<E[K]>) {
         let set = this.listeners.get(event);
         if (!set) {
             set = new Set();
@@ -22,7 +22,7 @@ export default class EventEmitter<E extends EventMap = EventMap> {
     /**
      * Unsubscribe from an event
      */
-    public off<K extends keyof E>(event: K, callback?: EventCallback | null) {
+    public off<K extends keyof E>(event: K, callback?: EventCallback<E[K]> | null) {
         const set = this.listeners.get(event);
         if (!set) return;
 
@@ -40,17 +40,18 @@ export default class EventEmitter<E extends EventMap = EventMap> {
     /**
      * Fire one or multiple events
      */
-    public fire<K extends keyof E, T extends object = object, V = any>(events: K | K[], detail: EventDetail<T, V>) {
+    public fire<K extends keyof E, T extends object = object, PV = any, V = PV>(events: K | K[], detail: EventDetail<T, PV, V>): SimpleEvent<T, PV, V> {
 
         let isDefaultPrevented = false;
         let isStopPropagation = false;
 
-        const { target, ...change } = detail;
+        const { target, value, ...change } = detail;
 
-        const eventInstance: SimpleEvent<T, V> = {
+        const eventInstance: SimpleEvent<T, PV, V> = {
             type: String(events),
             target,
             change,
+            value: (value ?? change.newValue) as any,
             get isDefaultPrevented() {
                 return isDefaultPrevented;
             },
@@ -71,11 +72,11 @@ export default class EventEmitter<E extends EventMap = EventMap> {
                 this.dispatch(ev, eventInstance);
                 if (eventInstance.isStopPropagation) break;
             }
-            return;
+            return eventInstance;
         }
 
         this.dispatch(events, eventInstance);
-        return;
+        return eventInstance;
     }
 
     protected dispatch<K extends keyof E>(type: K, event: SimpleEvent<any, any>) {

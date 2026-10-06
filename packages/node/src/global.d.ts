@@ -1,5 +1,6 @@
 import { JSX } from "react/jsx-runtime";
 import { CSSProperties } from "react";
+import { SimpleEvent } from "./types";
 
 declare global {
     export interface ModelRegistry { }

@@ -7,7 +7,6 @@ export { default as SpotsContainer } from "./SpotsContainer";
 
 export * from "./theme";
 export * from "./contexts";
-export * from "./controllers";
 export * from "./hooks";
 export * from "./spots";
 export * from "./actions";

@@ -1,11 +1,11 @@
+import { useContainer } from "@/contexts";
 import { Node } from "@bambu/node";
 import { useEffect, useMemo, useState } from "react";
-import { useGestureController } from "../contexts/GestureProvider";
 
 export interface Props {}
 
 export default function HoveringSpot({}: Props) {
-    const gesture = useGestureController();
+    const { Gesture } = useContainer();
     const [nodes, setNodes] = useState<Node[]>([]);
     const rects = useMemo<DOMRectList[]>(() => {
         const elements = nodes
@@ -44,12 +44,15 @@ export default function HoveringSpot({}: Props) {
     }, [rects]);
 
     useEffect(() => {
-        return gesture.on("hovering", (e) => {
-            if (Array.isArray(e.value) && e.value.every((e) => e instanceof Node)) {
+        return Gesture.on("hovering", (e) => {
+            if (
+                Array.isArray(e.value) &&
+                e.value.every((e) => e instanceof Node)
+            ) {
                 setNodes(e.value);
             }
         });
-    }, [gesture]);
+    }, []);
 
     return (
         <svg

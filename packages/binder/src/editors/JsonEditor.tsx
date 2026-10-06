@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import CodeMirror, { ReactCodeMirrorRef, ViewUpdate } from "@uiw/react-codemirror";
 import { json, jsonParseLinter } from "@codemirror/lang-json";
-import { useIsDarkMode } from "@bambu/react";
+import { useColorMode } from "@bambu/react";
 import { Box } from "@mui/material";
 import { SETUP } from "./setup";
 import { linter, lintGutter } from "@codemirror/lint";
@@ -12,7 +12,7 @@ export interface JsonEditorProps {
 
 export default function JsonEditor({ value: initialValue }: JsonEditorProps) {
     const codeMirrorRef = useRef<ReactCodeMirrorRef | null>(null);
-    const isDarkMode = useIsDarkMode();
+    const isDarkMode = useColorMode();
     const [value, setValue] = useState(initialValue);
 
     const onChange = useCallback((val: string, viewUpdate: ViewUpdate) => {

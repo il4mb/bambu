@@ -4,14 +4,14 @@ import {
     Canvas,
     Screen,
     ContainerProvider,
-    GestureProvider,
     SpotsContainer,
-    ViewportProvider,
     DeviceSwitch,
     HilightSpot,
+    ThemeSwitch,
 } from "@bambu/react";
 import { BinderProvider, EventsManager, VarsManager } from "@bambu/binder";
 import { useMemo } from "react";
+import { Box } from "@mui/material";
 
 type AppProps = {};
 
@@ -152,9 +152,10 @@ export default function App({}: AppProps) {
                 initialValue={initialValue}
             >
                 <BinderProvider>
-                    <div>
+                    <Box sx={{ py: 1 }}>
                         <DeviceSwitch />
-                    </div>
+                        <ThemeSwitch />
+                    </Box>
                     <div style={{ display: "flex", flex: 1 }}>
                         <Screen>
                             <Canvas />
@@ -162,7 +163,13 @@ export default function App({}: AppProps) {
                                 <HilightSpot />
                             </SpotsContainer>
                         </Screen>
-                        <div style={{ flexBasis: 260 }}>
+                        <div
+                            style={{
+                                flexBasis: 260,
+                                minWidth: 200,
+                                width: "100%",
+                            }}
+                        >
                             {/* <StyledManager /> */}
                             <EventsManager />
                             <VarsManager />

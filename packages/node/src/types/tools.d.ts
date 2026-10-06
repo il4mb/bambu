@@ -37,3 +37,7 @@ export type PathValue<T, P extends string> =
 
 
 export type AddPrefix<P extends string, T extends string> = `${P}${T}`;
+
+type AddPrefixToKeys<P extends string, T> = {
+    [K in keyof T as K extends string ? `${P}${K}` : K]: T[K];
+};

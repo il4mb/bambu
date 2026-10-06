@@ -7,7 +7,6 @@ import { feedbackCustomizations } from "./customizations/feedback";
 import { navigationCustomizations } from "./customizations/navigation";
 import { surfacesCustomizations } from "./customizations/surfaces";
 import { colorSchemes, typography, shadows, shape } from "./themePrimitives";
-// @ts-ignore
 import FigtreeTtf from "./fonts/Figtree.ttf";
 import { CssBaseline } from "@mui/material";
 

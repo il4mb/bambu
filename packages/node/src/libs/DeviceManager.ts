@@ -1,8 +1,8 @@
 import { EventEmitter } from "../core";
 import { createRef, RefObject } from "react";
-import _ from 'lodash';
-import { CreateEventMap, EventDetail } from "../types";
+import { CreateEventMap, EventDetail, SimpleEvent } from "../types";
 import Container from "../Container";
+import { isEqual } from "lodash";
 
 export type Device = {
     label: string;
@@ -37,9 +37,7 @@ export const DEFAULT_DEVICES = {
 
 // Changed `&` to `|` so it correctly unions default keys with any overridden keys
 export type DeviceName = keyof typeof DEFAULT_DEVICES | keyof OverridableDevices;
-
-
-type Events = CreateEventMap<"change" | "device:change">;
+type Events = CreateEventMap<DeviceManager, { change: Device | null }>;
 
 export class DeviceManager extends EventEmitter<Events> {
 
@@ -83,10 +81,15 @@ export class DeviceManager extends EventEmitter<Events> {
     public setDevice(id: DeviceName | null) {
         const prev = this._devices.get(this._activeId as string) ?? null;
         const next = this._devices.get(id as string) ?? null;
-        if (_.isEqual(prev, next)) return;
+        if (isEqual(prev, next)) return;
 
         this._activeId = id;
-        this.firePropertyChange("activeId", next, prev);
+        this.fire("change", {
+            target: this,
+            property: ["activeId"],
+            newValue: next,
+            oldValue: prev
+        });
     }
 
     /**
@@ -117,29 +120,10 @@ export class DeviceManager extends EventEmitter<Events> {
         return Array.from(this._devices.values()).find(predicate);
     }
 
-    /**
-     * Helper to wrap property change firing logic
-     */
-    private firePropertyChange(property: string, newValue: any, oldValue: any) {
-        this.fire(["device:change", "change"], {
-            target: this,
-            // @ts-ignore
-            property,
-            newValue,
-            oldValue
-        });
-    }
 
-    /**
-     * Override fire to propagate events up to the container
-     */
-    public fire<K extends string, T extends object = object, V = any>(
-        events: K | K[],
-        detail: EventDetail<T, V>
-    ): void {
-        super.fire(events, detail);
-        // Bubble the event to the container level
-        // @ts-ignore - Assuming Container has a compatible fire method signature
-        this.container.fire(events, detail);
+    public fire<K extends keyof Events, T extends object = object, PV = any, V = PV>(events: K | K[], detail: EventDetail<T, PV, V>): SimpleEvent<T, PV, V> {
+        const event = super.fire(events, detail);
+        this.container.fire("device:change", detail);
+        return event;
     }
 }

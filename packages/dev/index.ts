@@ -2,18 +2,18 @@ import { plugin, serve, redis } from "bun";
 import indexHtml from "./src/index.html";
 import sass from "sass";
 
-plugin({
-    name: "scss-loader",
-    setup(build) {
-        build.onLoad({ filter: /\.scss$/ }, (args) => {
-            const result = sass.compile(args.path);
-            return {
-                contents: result.css,
-                loader: "css",
-            };
-        });
-    },
-});
+// plugin({
+//     name: "scss-loader",
+//     setup(build) {
+//         build.onLoad({ filter: /\.scss$/ }, (args) => {
+//             const result = sass.compile(args.path);
+//             return {
+//                 contents: result.css,
+//                 loader: "css",
+//             };
+//         });
+//     },
+// });
 
 const GOOGLE_FONTS_API_URL = "https://www.googleapis.com/webfonts/v1/webfonts?key=";
 

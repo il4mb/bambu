@@ -1,4 +1,4 @@
-import { useContainer, useViewportController } from "@/contexts";
+import { useContainer } from "@/contexts";
 import { MenuItem, Select } from "@mui/material";
 import { useState } from "react";
 
@@ -17,7 +17,7 @@ export default function DeviceSwitch({}: DeviceSwitchProps) {
         <Select
             value={activeId}
             onChange={(e) => handleChange(String(e.target.value))}
-            size="small"
+            // size="small"
         >
             {devices.map(([id, device]) => (
                 <MenuItem key={id} value={id}>

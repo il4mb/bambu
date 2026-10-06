@@ -1,6 +1,5 @@
-import { useGestureController } from "@/contexts";
-import { DragingData } from "@/controllers";
-import { Node } from "@bambu/node";
+import { useContainer } from "@/contexts";
+import { DragingData, Node } from "@bambu/node";
 import { useEffect, useMemo, useState } from "react";
 
 // 1. Moved outside the component to prevent recreation on every render.
@@ -21,7 +20,7 @@ const getPath = (elements: HTMLElement[]) => {
 type HilightSpotProps = {};
 
 export default function HilightSpot({}: HilightSpotProps) {
-    const gesture = useGestureController();
+    const { Gesture } = useContainer();
 
     const [hovering, setHovering] = useState<Node[]>([]);
     const [selecting, setSelecting] = useState<Node[]>([]);
@@ -56,7 +55,9 @@ export default function HilightSpot({}: HilightSpotProps) {
         }
 
         // Get the relevant sibling based on drop position
-        const sibling = isBefore ? element.previousElementSibling : element.nextElementSibling;
+        const sibling = isBefore
+            ? element.previousElementSibling
+            : element.nextElementSibling;
         const sibRect = sibling ? sibling.getBoundingClientRect() : null;
 
         if (dragging.layout === "horizontal") {
@@ -65,7 +66,8 @@ export default function HilightSpot({}: HilightSpotProps) {
 
             if (sibRect) {
                 // Ensure they are on the same visual row (prevents flex-wrap calculation bugs)
-                const isSameRow = Math.abs(sibRect.top - rect.top) < rect.height / 2;
+                const isSameRow =
+                    Math.abs(sibRect.top - rect.top) < rect.height / 2;
 
                 if (isSameRow) {
                     if (isBefore) {
@@ -91,7 +93,8 @@ export default function HilightSpot({}: HilightSpotProps) {
 
             if (sibRect) {
                 // Ensure they are in the same visual column
-                const isSameColumn = Math.abs(sibRect.left - rect.left) < rect.width / 2;
+                const isSameColumn =
+                    Math.abs(sibRect.left - rect.left) < rect.width / 2;
 
                 if (isSameColumn) {
                     if (isBefore) {
@@ -115,17 +118,15 @@ export default function HilightSpot({}: HilightSpotProps) {
 
     // 2. Hook up the gesture controller to populate the state arrays
     useEffect(() => {
-        if (!gesture) return;
-
         let draggingTargetElement: HTMLElement;
         // Assuming your gesture controller uses standard EventEmitter patterns
-        const offHover = gesture.on("hovering", (e) => setHovering(e.value));
-        const offSelect = gesture.on("selecting", (e) => setSelecting(e.value));
-        const onDraggingData = gesture.on("draggingData", (e) => {
+        const offHover = Gesture.on("hovering", (e) => setHovering(e.value));
+        const offSelect = Gesture.on("selecting", (e) => setSelecting(e.value));
+        const onDraggingData = Gesture.on("draggingData", (e) => {
             setDragging(e.value);
         });
 
-        const onDragging = gesture.on("dragging", (e) => {
+        const onDragging = Gesture.on("dragging", (e) => {
             if (!e.value) setDragging(null);
         });
 
@@ -135,7 +136,7 @@ export default function HilightSpot({}: HilightSpotProps) {
             if (onDraggingData) onDraggingData();
             if (onDragging) onDragging();
         };
-    }, [gesture]);
+    }, []);
 
     // 3. Keep highlights attached to elements when scrolling or resizing the window
     // 3. Keep highlights attached to elements when scrolling or resizing
@@ -161,27 +162,34 @@ export default function HilightSpot({}: HilightSpotProps) {
         });
 
         // 2. The 'resize' event lives on the Window, not the Document
-        const win = gesture.document.defaultView || window;
+        const win = Gesture.document?.defaultView || window;
         win.addEventListener("resize", updateRects, { passive: true });
 
         // Scroll can stay on the document with capture: true
-        gesture.document.addEventListener("scroll", updateRects, { capture: true, passive: true });
+        Gesture.document?.addEventListener("scroll", updateRects, {
+            capture: true,
+            passive: true,
+        });
 
         return () => {
             resizeObserver.disconnect();
             cancelAnimationFrame(frameId);
             win.removeEventListener("resize", updateRects);
-            gesture.document.removeEventListener("scroll", updateRects, { capture: true });
+            Gesture.document?.removeEventListener("scroll", updateRects, {
+                capture: true,
+            });
         };
         // Note: We depend on the actual arrays now, not just .length,
         // so the observer re-binds if the specific selected elements change!
-    }, [hovering, selecting, gesture]);
+    }, [hovering, selecting]);
 
     // 4. Derived state: Removed the `rects` useState.
     // Calculating DOM rects directly in useMemo prevents double-rendering.
     const paths = useMemo(() => {
         const extractElements = (nodes: Node[]) =>
-            nodes.map((n) => n.element).filter((el): el is HTMLElement => Boolean(el));
+            nodes
+                .map((n) => n.element)
+                .filter((el): el is HTMLElement => Boolean(el));
 
         return {
             hovering: getPath(extractElements(hovering)),
@@ -202,9 +210,22 @@ export default function HilightSpot({}: HilightSpotProps) {
             }}
         >
             {/* Visual distinction: Select = Blue Solid, Hover = Red Dashed */}
-            {paths.selecting && <path d={paths.selecting} fill="none" stroke="#0066ff" strokeWidth={2} />}
+            {paths.selecting && (
+                <path
+                    d={paths.selecting}
+                    fill="none"
+                    stroke="#0066ff"
+                    strokeWidth={2}
+                />
+            )}
             {paths.hovering && (
-                <path d={paths.hovering} fill="none" stroke="red" strokeWidth={1} strokeDasharray="4 2" />
+                <path
+                    d={paths.hovering}
+                    fill="none"
+                    stroke="red"
+                    strokeWidth={1}
+                    strokeDasharray="4 2"
+                />
             )}
             {draggingTargetRect && (
                 <rect

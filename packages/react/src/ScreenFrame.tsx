@@ -14,12 +14,11 @@ export default function ScreenFrame({ children }: ScreenProps) {
     const [device, setDevice] = useState(Devices.device);
     const [scale, setScale] = useState(1);
 
-    // 1. Listen for device changes from the controller
     useEffect(() => {
-        return Devices.on("device:change", () => {
+        return Devices.on("change", () => {
             setDevice(Devices.device);
         });
-    }, [Devices]);
+    }, []);
 
     // 2. Calculate scale to fit inside the parent element
     useEffect(() => {
@@ -61,21 +60,25 @@ export default function ScreenFrame({ children }: ScreenProps) {
 
     return (
         <Box
-            sx={{
+            sx={(theme) => ({
                 position: "relative",
-                backgroundColor: "#2a2a44",
+                backgroundColor: "#d4d4df",
                 flex: 1,
-                boxShadow: "inset 0px 0px 8px black",
+                boxShadow: "inset 0px 0px 8px #0004",
                 borderRadius: "18px",
-            }}
+                ...theme.applyStyles("dark", {
+                    backgroundColor: "#2a2a44",
+                }),
+            })}
         >
             <Box
                 ref={Devices.screenRef}
-                sx={{
+                sx={(theme) => ({
                     borderRadius: "24px",
                     overflow: "visible",
-                    border: "8px solid #ccc",
+                    border: "8px solid #3a3a3a",
                     borderWidth: BORDER_SIZE / 2,
+                    boxShadow: "0px 0px 8px #0004",
 
                     // content-box ensures the inner space is exactly the device width/height
                     // (otherwise the 8px border eats into the device resolution)
@@ -101,7 +104,10 @@ export default function ScreenFrame({ children }: ScreenProps) {
                     // Smooth animation when changing device profiles or resizing
                     transition:
                         "width 0.3s ease, height 0.3s ease, transform 0.1s ease-out",
-                }}
+                    ...theme.applyStyles("dark", {
+                        borderColor: "#696969",
+                    }),
+                })}
             >
                 {children}
             </Box>

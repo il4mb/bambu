@@ -2,6 +2,26 @@ import { Theme, Components, alpha } from "@mui/material/styles";
 import { COLOR_SCHEME } from "../themePrimitives";
 
 export const inputsCustomizations: Components<Theme> = {
+    MuiInputBase: {
+        styleOverrides: {
+            root: {
+                "& .MuiSelect-select": {
+                    fontSize: 12,
+                    padding: "2px 8px",
+                    "&:has( .MuiSvgIcon-root)": {
+                        paddingRight: 0,
+                    },
+
+                    "& .MuiSvgIcon-root": {
+                        width: ".75em",
+                        height: ".75em",
+                        top: "calc(50% - .4em)",
+                    },
+                },
+            },
+        },
+    },
+
     MuiTextField: {
         styleOverrides: {
             root: {
@@ -16,7 +36,7 @@ export const inputsCustomizations: Components<Theme> = {
                     },
                 },
                 "& input, .MuiSelect-select": {
-                    padding: ".5em 1em",
+                    padding: "2px 8px",
                 },
                 "& .MuiSvgIcon-root": {
                     width: ".75em",
@@ -24,6 +44,26 @@ export const inputsCustomizations: Components<Theme> = {
                     top: "calc(50% - .4em)",
                 },
             },
+        },
+        variants: [
+            {
+                props: { size: "small" },
+                style: { fontSize: "10px" },
+            },
+            {
+                props: { size: "medium" },
+                style: { fontSize: "12px" },
+            },
+        ],
+    },
+
+    MuiSelect: {
+        styleOverrides: {
+            root: () => ({
+                background: "red",
+                display: "none",
+                fontSize: "10px",
+            }),
         },
 
         variants: [
@@ -38,10 +78,6 @@ export const inputsCustomizations: Components<Theme> = {
         ],
     },
 
-    MuiSelect: {
-        styleOverrides: {},
-    },
-
     MuiIconButton: {
         styleOverrides: {
             root: ({ theme, ownerState }) => {
@@ -50,21 +86,26 @@ export const inputsCustomizations: Components<Theme> = {
                     minHeight: 0,
                     padding: "4px",
                     borderRadius: "4px",
-                    variants: COLOR_SCHEME.map((colorName) =>
-                        ["small", "medium", "large"].map((size, i) => ({
+                    variants: [
+                        ...COLOR_SCHEME.map((colorName) => ({
                             props: {
                                 color: colorName,
-                                size,
                             },
                             style: {
-                                backgroundColor: alpha(theme.palette[colorName].main, 0.25),
+                                backgroundColor: alpha(
+                                    theme.palette[colorName].main,
+                                    0.25,
+                                ),
                                 color: theme.palette[colorName].main,
-                                padding: `${2 + 2 * (i + 1)}px`,
                                 boxShadow: `0px 0px 0px 1px ${alpha(theme.palette[colorName].main, 0.5)}`,
-
                                 "&:hover": {
-                                    backgroundColor: alpha(theme.palette[colorName].main, 0.75),
-                                    color: theme.palette.getContrastText(theme.palette[colorName].main),
+                                    backgroundColor: alpha(
+                                        theme.palette[colorName].main,
+                                        0.75,
+                                    ),
+                                    color: theme.palette.getContrastText(
+                                        theme.palette[colorName].main,
+                                    ),
                                 },
 
                                 ...theme.applyStyles("dark", {
@@ -72,16 +113,34 @@ export const inputsCustomizations: Components<Theme> = {
                                 }),
 
                                 ...(ownerState.active && {
-                                    backgroundColor: alpha(theme.palette[colorName].main, 0.85),
-                                    color: theme.palette.getContrastText(theme.palette[colorName].main),
+                                    backgroundColor: alpha(
+                                        theme.palette[colorName].main,
+                                        0.85,
+                                    ),
+                                    color: theme.palette.getContrastText(
+                                        theme.palette[colorName].main,
+                                    ),
                                     "&:hover": {
-                                        backgroundColor: theme.palette[colorName].main,
-                                        color: theme.palette.getContrastText(theme.palette[colorName].main),
+                                        backgroundColor:
+                                            theme.palette[colorName].main,
+                                        color: theme.palette.getContrastText(
+                                            theme.palette[colorName].main,
+                                        ),
                                     },
                                 }),
                             },
                         })),
-                    ).flat(),
+                        ...["small", "medium", "large"].map((size, i) => ({
+                            props: {
+                                size,
+                            },
+                            style: {
+                                minWidth: (i + 1) * 10,
+                                minHeight: (i + 1) * 10,
+                                padding: `${(i + 1) * 4}px`,
+                            },
+                        })),
+                    ]
                 };
             },
         },
