@@ -1,5 +1,44 @@
-import { EventEmitter } from "@bambu/node";
-import { StyledController } from "./StyledController";
+import EventEmitter from "../core/EventEmitter";
+import { SimpleEvent } from "../types";
+import StyleManager from "./StyleManager";
+
+export interface Api {
+    fetch: (params?: URLSearchParams) => Promise<any>;
+}
+
+export interface FontItem {
+    family: string
+    variants: string[]
+    subsets: string[]
+    version: string
+    lastModified: string
+    files: FontFiles
+    category: string
+    kind: string
+    menu: string
+    colorCapabilities?: string[]
+}
+
+export interface FontFiles {
+    regular?: string
+    italic?: string
+    "500"?: string
+    "600"?: string
+    "700"?: string
+    "800"?: string
+    "100"?: string
+    "200"?: string
+    "300"?: string
+    "900"?: string
+    "100italic"?: string
+    "200italic"?: string
+    "300italic"?: string
+    "500italic"?: string
+    "600italic"?: string
+    "700italic"?: string
+    "800italic"?: string
+    "900italic"?: string
+}
 
 type PendingEntry = {
     promise: Promise<void>;
@@ -9,21 +48,25 @@ type PendingEntry = {
 
 export type FontLease = { release: () => void };
 
-type WebfontsEventMap = {
-    items: (fonts: FontItem[]) => void;
-    loading: (loading: boolean) => void;
-    [key: `loaded:${string}`]: (font: FontItem) => void;
+type FontsManagerEvents = {
+    items: SimpleEvent<FontsManager, FontItem[]>
+    loading: SimpleEvent<FontsManager, boolean>
+    [key: `loaded:${string}`]: SimpleEvent<FontsManager, FontItem>
 };
 
-export class WebfontsController extends EventEmitter<WebfontsEventMap> {
+export class FontsManager extends EventEmitter<FontsManagerEvents> {
 
     protected items: FontItem[] = [];
 
     readonly loadedSet: Set<string> = new Set();
     private readonly pendingMap = new Map<string, PendingEntry>();
 
-    constructor(protected api: Api, protected controller: StyledController) {
+    constructor(protected styleManager: StyleManager) {
         super();
+    }
+
+    get document() {
+        return this.styleManager.container.Nodes.body?.element?.ownerDocument;
     }
 
     /**
@@ -65,7 +108,7 @@ export class WebfontsController extends EventEmitter<WebfontsEventMap> {
                 .then(() => {
                     this.loadedSet.add(fontKey);
                     this.pendingMap.delete(fontKey);
-                    this.emit(`loaded:${fontKey}`, item);
+                    this.fire(`loaded:${fontKey}`, item);
                 })
                 .catch((err) => {
                     this.pendingMap.delete(fontKey);
@@ -111,8 +154,8 @@ export class WebfontsController extends EventEmitter<WebfontsEventMap> {
 
 
     private async fetchAndLoad(item: FontItem, variant: string, signal: AbortSignal): Promise<void> {
-        const idoc = this.controller.document?.body?.element?.ownerDocument;
 
+        // @ts-ignore
         const variantUrl = item.files[variant];
         if (!variantUrl) {
             throw new Error(`Variant "${variant}" not found for font "${item.family}"`);
@@ -133,15 +176,14 @@ export class WebfontsController extends EventEmitter<WebfontsEventMap> {
         await face.load();
 
         document.fonts.add(face);
-        if (idoc) idoc.fonts.add(face);
+        if (this.document) this.document.fonts.add(face);
     }
 
     public isFontLoaded(item: FontItem, variant: string = "regular"): boolean {
         const fontKey = `${item.family}-${variant}`;
-        const idoc = this.controller.document?.body?.element?.ownerDocument;
         return this.loadedSet.has(fontKey)
             && document.fonts.check(`1em ${item.family}`)
-            && (idoc ? idoc.fonts.check(`1em ${item.family}`) : true);
+            && (this.document ? this.document.fonts.check(`1em ${item.family}`) : true);
     }
 
     get fonts() {
@@ -175,30 +217,23 @@ export class WebfontsController extends EventEmitter<WebfontsEventMap> {
     // -------------------------------
 
     async fetch(params?: URLSearchParams) {
-        try {
-            this.emit("loading", true);
-            const response = await this.api.fetch(params);
+        // try {
+        //     this.emit("loading", true);
+        //     const response = await this.api.fetch(params);
 
-            if (Array.isArray(response.items)) {
-                this.items = response.items;
-                this.emit("items", this.items);
-            } else {
-                const data = await response.json();
-                const fonts: FontItem[] = data.items || [];
-                this.items = fonts;
-                this.emit("items", fonts);
-            }
-        } catch (error) {
-            console.error("Error fetching fonts:", error);
-        } finally {
-            this.emit("loading", false);
-        }
+        //     if (Array.isArray(response.items)) {
+        //         this.items = response.items;
+        //         this.emit("items", this.items);
+        //     } else {
+        //         const data = await response.json();
+        //         const fonts: FontItem[] = data.items || [];
+        //         this.items = fonts;
+        //         this.emit("items", fonts);
+        //     }
+        // } catch (error) {
+        //     console.error("Error fetching fonts:", error);
+        // } finally {
+        //     this.emit("loading", false);
+        // }
     }
-
-
-    // on<K extends keyof WebfontsEventMap>(event: K, callback: WebfontsEventMap[K]): () => void {
-
-
-    //     return super.on(event, callback);
-    // }
 }

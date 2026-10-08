@@ -1,10 +1,18 @@
 import { ComponentProps } from "../../types/define";
 
-export default function ListComponent({ children, ref,}: ComponentProps<"list">) {
-   
+export default function ListComponent({
+    children,
+    ref,
+}: ComponentProps<"list">) {
     return (
-        <div ref={ref}>
-            <h1>List Component</h1>
+        <div
+            ref={ref}
+            style={{
+                all: "inherit",
+                padding: 0,
+                margin: 0,
+            }}
+        >
             {children}
         </div>
     );

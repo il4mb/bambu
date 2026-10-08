@@ -1,7 +1,7 @@
 import Container from "../Container";
 import { Observerable } from "../core";
 import Node from "../Node";
-import { AddPrefixToKeys, CreateEventMap, EventDetail, SimpleEvent } from "../types";
+import { ChangeEvent, EventDetail, SimpleEvent } from "../types";
 import NodeManager from "./NodeManager";
 
 export type Pointer = { x: number, y: number }
@@ -352,13 +352,10 @@ export class GestureManager extends Observerable<GestureManager, GestureState> {
         return layout as WrapperLayout;
     }
 
-
-    public fire<K extends keyof GestureState, T extends object = object, PV = any, V = PV>(events: K | K[], detail: EventDetail<T, PV, V>): SimpleEvent<T, PV, V> {
+    public fire<K extends keyof GestureState, PV = any, V = PV>(events: K | K[], detail?: EventDetail<PV, V> | undefined): SimpleEvent<K, GestureManager> | ChangeEvent<K, GestureManager, PV, V> {
         const event = super.fire(events, detail);
-
-        if (!event.isDefaultPrevented) {
-            // @ts-ignore
-            this.container.fire(`gesture:${detail.property.join(":")}`, detail);
+        if (!event.isDefaultPrevented && detail) {
+            this.container.fire(`gesture:${detail.property}`, detail);
         }
         return event;
     }

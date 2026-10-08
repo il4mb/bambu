@@ -1,5 +1,5 @@
 import NodeData from "../NodeData";
-import { EventDetail, SimpleEvent } from "../types";
+import { ChangeEvent, CreateEventMap, EventDetail, EventInstance, SimpleEvent } from "../types";
 import { Observerable } from "./Observerable";
 export type Type = typeof Descriptor.SUPPORTED_TYPE[number];
 export type DescriptorState<T extends Type> = {
@@ -9,10 +9,13 @@ export type DescriptorState<T extends Type> = {
     renameable: boolean;
     editable: boolean
 }
-export class Descriptor<T extends Type = Type> extends Observerable<Descriptor<T>, DescriptorState<T>> {
+export class Descriptor<
+    T extends Type = Type,
+    S extends DescriptorState<T> = DescriptorState<T>
+> extends Observerable<Descriptor<T>, S> {
     static SUPPORTED_TYPE = ["string", "number", "object", "boolean", "array", "unknown"] as const;
 
-    state: DescriptorState<T> = {
+    state: S = {
         type: "unknown" as T,
         name: "",
         value: null,
@@ -49,10 +52,12 @@ export class Descriptor<T extends Type = Type> extends Observerable<Descriptor<T
         return this.state.editable;
     }
 
-    public fire<K extends keyof DescriptorState<T>, O extends object = object, PV = any, V = PV>(events: K | K[], detail: EventDetail<O, PV, V>): SimpleEvent<O, PV, V> {
+    public fire<K extends keyof CreateEventMap<Descriptor<T, DescriptorState<T>>, S>, PV = any, V = PV>(events: K | K[], detail?: EventDetail<PV, V> | undefined): SimpleEvent<Descriptor<T, DescriptorState<T>>> | ChangeEvent<Descriptor<T, DescriptorState<T>>, PV, V> {
         const event = super.fire(events, detail);
-        // @ts-ignore
-        this.data.fire([this.name, `${this.name}:${detail.property.join(":")}`], detail);
+
+        if (!event.isDefaultPrevented) {
+            this.data.fire([this.name, `${this.name}:${detail.property.join(":")}`], detail);
+        }
         return event;
     }
 }

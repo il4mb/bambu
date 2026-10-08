@@ -2,7 +2,7 @@ import { isEqual } from "lodash";
 import { CreateEventMap, EventMap } from "../types";
 import EventEmitter from "./EventEmitter";
 
-export abstract class Observerable<T extends object, O extends Record<string, any>, E extends EventMap = CreateEventMap<T, O>> extends EventEmitter<E> {
+export abstract class Observerable<T extends object, O extends Record<string, any>, E extends EventMap = CreateEventMap<T, O>> extends EventEmitter<T, E> {
     abstract readonly state: O;
 
     public set(patch: Partial<O>): void;

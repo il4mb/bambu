@@ -1,5 +1,5 @@
 import { useContainer } from "@/contexts";
-import { MenuItem, Select } from "@mui/material";
+import { MenuItem, Select, TextField } from "@mui/material";
 import { useState } from "react";
 
 type DeviceSwitchProps = {};
@@ -14,16 +14,17 @@ export default function DeviceSwitch({}: DeviceSwitchProps) {
         setActiveId(id);
     };
     return (
-        <Select
+        <TextField
             value={activeId}
             onChange={(e) => handleChange(String(e.target.value))}
-            // size="small"
+            sx={{ minWidth: 9 }}
+            select
         >
             {devices.map(([id, device]) => (
                 <MenuItem key={id} value={id}>
                     {device.label}
                 </MenuItem>
             ))}
-        </Select>
+        </TextField>
     );
 }

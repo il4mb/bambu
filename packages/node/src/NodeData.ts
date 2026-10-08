@@ -1,5 +1,5 @@
 import { isEqual } from "lodash";
-import { AddPrefix, CreateEventMap, EventDetail, InferNodeData, SimpleEvent } from "./types";
+import { AddPrefix, ChangeEvent, CreateEventMap, EventDetail, InferNodeData, SimpleEvent } from "./types";
 import EventEmitter from "./core/EventEmitter";
 import Node from "./Node";
 import { Descriptor, Type } from "./core/Descriptor";
@@ -19,7 +19,7 @@ type Events<T extends ModuleName> = CreateEventMap<
 export default class NodeData<
     T extends ModuleName = ModuleName,
     O extends Record<string, Descriptor> = TNodeDataDescriptor<T>
-> extends EventEmitter<Events<T>> {
+> extends EventEmitter<NodeData<T>, Events<T>> {
 
     // Allow TypeScript to recognize dynamic dot-notation properties
     [key: string]: any;
@@ -91,7 +91,7 @@ export default class NodeData<
             // @ts-ignore Apply state change
             this.descriptors.set(key, newValue);
 
-            const eventDetail = { target: this, property: [String(key)], oldValue, newValue };
+            const eventDetail = { target: this, property: String(key), oldValue, newValue };
             // @ts-ignore
             this.fire(["change", `change:${String(key)}`], eventDetail);
 
@@ -101,9 +101,9 @@ export default class NodeData<
             const newDescriptor = this.createItem(String(key), newValue);
             this.descriptors.set(String(key), newDescriptor);
 
-            // const eventDetail = { target: this, property: [String(key)], oldValue, newValue: newDescriptor };
-            // // @ts-ignore
-            // this.fire(["change", `change:${String(key)}`], eventDetail);
+            const eventDetail = { target: this, property: String(key), oldValue, newValue: newDescriptor };
+            // @ts-ignore
+            this.fire(["change", `change:${String(key)}`], eventDetail);
         }
     }
 
@@ -111,7 +111,7 @@ export default class NodeData<
         return this.descriptors.get(String(key));
     }
 
-    public fire<K extends keyof Events<T>, O extends object = object, PV = any, V = PV>(events: K | K[], detail: EventDetail<O, PV, V>): SimpleEvent<O, PV, V> {
+    public fire<K extends keyof CreateEventMap<NodeData<keyof ModelRegistry, TNodeDataDescriptor<keyof ModelRegistry>>, "change" | "change:style" | `change:${keyof (ModelRegistry[T] extends { extends: infer P extends ModuleName; } ? (ModelRegistry[T] extends { data: infer D; } ? D : {}) & NodeDataOverridable & (ModelRegistry[P] extends { extends: infer P extends ModuleName; } ? (ModelRegistry[P] extends { data: infer D; } ? D : {}) & NodeDataOverridable & (ModelRegistry[P] extends { extends: infer P extends ModuleName; } ? (ModelRegistry[P] extends { data: infer D; } ? D : {}) & NodeDataOverridable & (ModelRegistry[P] extends { extends: infer P extends ModuleName; } ? (ModelRegistry[P] extends { data: infer D; } ? D : {}) & NodeDataOverridable & (ModelRegistry[P] extends { extends: infer P extends ModuleName; } ? (ModelRegistry[P] extends { data: infer D; } ? D : {}) & NodeDataOverridable & (ModelRegistry[P] extends { extends: infer P extends ModuleName; } ? (ModelRegistry[P] extends { data: infer D; } ? D : {}) & NodeDataOverridable & (ModelRegistry[P] extends { extends: infer P extends ModuleName; } ? (ModelRegistry[P] extends { data: infer D; } ? D : {}) & NodeDataOverridable & (ModelRegistry[P] extends { extends: infer P extends ModuleName; } ? (ModelRegistry[P] extends { data: infer D; } ? D : {}) & NodeDataOverridable & (ModelRegistry[P] extends { extends: infer P extends ModuleName; } ? (ModelRegistry[P] extends { data: infer D; } ? D : {}) & NodeDataOverridable & (ModelRegistry[P] extends { extends: infer P extends ModuleName; } ? (ModelRegistry[P] extends { data: infer D; } ? D : {}) & NodeDataOverridable & (ModelRegistry[P] extends { extends: infer P extends ModuleName; } ? (ModelRegistry[P] extends { data: infer D; } ? D : {}) & NodeDataOverridable & any : ModelRegistry[P] extends { data: infer D; } ? D : {}) : ModelRegistry[P] extends { data: infer D; } ? D : {}) : ModelRegistry[P] extends { data: infer D; } ? D : {}) : ModelRegistry[P] extends { data: infer D; } ? D : {}) : ModelRegistry[P] extends { data: infer D; } ? D : {}) : ModelRegistry[P] extends { data: infer D; } ? D : {}) : ModelRegistry[P] extends { data: infer D; } ? D : {}) : ModelRegistry[P] extends { data: infer D; } ? D : {}) : ModelRegistry[P] extends { data: infer D; } ? D : {}) : ModelRegistry[P] extends { data: infer D; } ? D : {}) : ModelRegistry[T] extends { data: infer D; } ? D : {}) & string}`>, PV = any, V = PV>(events: K | K[], detail?: EventDetail<PV, V> | undefined): SimpleEvent<NodeData<T, TNodeDataDescriptor<T>>> | ChangeEvent<NodeData<T, TNodeDataDescriptor<T>>, PV, V> {
         const event = super.fire(events, detail);
         if (!event.isDefaultPrevented) {
             // @ts-ignore

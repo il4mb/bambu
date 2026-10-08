@@ -31,7 +31,8 @@ export type Actions = {
     [K: string]: Action | false
 }
 
-export type Icon = FC<{ size: number; color: string }>;
+export type IconProps = { size: number; color?: string };
+export type Icon = FC<IconProps>;
 
 export type ComponentProps<T extends ModuleName> = { ref: RefObject<Element | nuull>; node: Node<T>; children?: ReactNode }
 export type Component<T extends ModuleName> = FC<ComponentProps<T>>;

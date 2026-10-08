@@ -51,8 +51,7 @@ export const useStyled = function <T>(
             const onChange = () => {
                 updateValue();
             };
-            node.on("data.style", onChange);
-            return () => node.off("data.style", onChange);
+            return node.on("change:data:style", onChange);
         });
 
         return () => {
@@ -100,16 +99,16 @@ export const useProperty = function <T = string>(property: keyof CSSProperties, 
             return allMatch ? firstValue : defaultValue;
         },
         (node, value) => {
-            node.set("data.style", (prev = {}) => {
-                if (!value) {
-                    const { [property]: removedProp, ...rest } = prev;
-                    return rest;
-                }
-                return {
-                    ...prev,
-                    [property]: value,
-                };
-            });
+            // node.set("change:data:style", (prev = {}) => {
+            //     if (!value) {
+            //         const { [property]: removedProp, ...rest } = prev;
+            //         return rest;
+            //     }
+            //     return {
+            //         ...prev,
+            //         [property]: value,
+            //     };
+            // });
         },
     );
 

@@ -1,5 +1,4 @@
-import { useStyleController } from "@/StyledProvider";
-import { WebfontsController } from "@/WebfontsController";
+import { useStyleManager } from "@/StyledProvider";
 import { useState, useEffect, useMemo, useCallback } from "react";
 
 export const useFonts = function () {
@@ -10,12 +9,12 @@ export const useFonts = function () {
     useEffect(() => {
         if (!webfonts) return;
         const listeners = [
-            webfonts.on("items", (fonts) => {
-                setFonts(fonts);
+            webfonts.on("items", (e) => {
+                setFonts(e.value);
                 setLoading(false);
             }),
-            webfonts.on("loading", (loading) => {
-                setLoading(loading);
+            webfonts.on("loading", (e) => {
+                setLoading(e.value);
             }),
         ];
         return () => {
@@ -32,15 +31,6 @@ export const useFonts = function () {
 };
 
 export const useWebfonts = function () {
-    const controller = useStyleController();
-    const [webfonts, setWebfonts] = useState<WebfontsController | null>(null);
-
-    useEffect(() => {
-        if (!controller) return;
-        return controller.on("webfonts", (webfontsController) => {
-            setWebfonts(webfontsController);
-        });
-    }, [controller]);
-
-    return webfonts;
+    const styleManager = useStyleManager();
+    return styleManager.fonts;
 };

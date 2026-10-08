@@ -16,6 +16,6 @@
             "@/*": ["./src/*"]
         }
     },
-    "include": ["src/**/*.ts", "src/**/*.tsx"],
+    "include": ["src/**/*.ts", "src/**/*.tsx", "../node/src/libs/FontsManager.ts"],
     "exclude": ["node_modules"]
 }

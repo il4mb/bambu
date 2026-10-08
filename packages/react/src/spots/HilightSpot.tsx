@@ -139,7 +139,6 @@ export default function HilightSpot({}: HilightSpotProps) {
     }, []);
 
     // 3. Keep highlights attached to elements when scrolling or resizing the window
-    // 3. Keep highlights attached to elements when scrolling or resizing
     useEffect(() => {
         if (hovering.length === 0 && selecting.length === 0) return;
 

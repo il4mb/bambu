@@ -1,4 +1,4 @@
-import { Box, Divider, SxProps, Typography } from "@mui/material";
+import { Box, Divider, IconButton, SxProps, Typography } from "@mui/material";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { ReactNode, useState } from "react";
 import ActionButton from "./ui/ActionButton";
@@ -12,7 +12,12 @@ export interface PropertyProps {
     defaultExpanded?: boolean;
     actions?: ReactNode;
 }
-export default function PropertyGroup({ label, children, defaultExpanded = false, actions }: PropertyProps) {
+export default function PropertyGroup({
+    label,
+    children,
+    defaultExpanded = false,
+    actions,
+}: PropertyProps) {
     const [expand, setExpand] = useState(defaultExpanded);
     const toggleExpand = () => setExpand((prev) => !prev);
     return (
@@ -26,13 +31,27 @@ export default function PropertyGroup({ label, children, defaultExpanded = false
                     alignItems: "center",
                 }}
             >
-                <Typography sx={{ fontSize: 10, flex: 1, fontWeight: 800 }} component={"span"}>
+                <Typography
+                    sx={{ fontSize: 10, flex: 1, fontWeight: 800 }}
+                    component={"span"}
+                >
                     {label}
                 </Typography>
-                <Box sx={{ display: "flex", flexDirection: "row", gap: 0.5, alignItems: "center" }}>
-                    <ActionButton onClick={toggleExpand}>
-                        {expand ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                    </ActionButton>
+                <Box
+                    sx={{
+                        display: "flex",
+                        flexDirection: "row",
+                        gap: 0.5,
+                        alignItems: "center",
+                    }}
+                >
+                    <IconButton size="small" onClick={toggleExpand}>
+                        {expand ? (
+                            <ChevronUp size={14} />
+                        ) : (
+                            <ChevronDown size={14} />
+                        )}
+                    </IconButton>
                     {actions}
                 </Box>
             </Box>

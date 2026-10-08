@@ -6,20 +6,25 @@ import EventEmitter from "../core/EventEmitter";
 import { CreateEventMap } from "../types";
 import { nanoid } from "nanoid";
 
-type NodeEvents = "node:change" | `node:change:${string}` | `node:${string}:change` | `node:${string}:change:${string}`;
+type NodeEvents =
+    | "node:change"
+    | `node:change:${string}`
+    | `node:${string}:change`
+    | `node:${string}:change:${string}`;
+
 type NodeManagerEvents = CreateEventMap<NodeManager, {
     [K in NodeEvents]: Node;
 }>;
 
-declare global {
-    interface EventRegistry {
-        NodeManager: NodeManagerEvents
-    }
-}
-
 /**
- * **ID:** Kelas Container utama yang mengelola seluruh pohon node (tree structure) dan siklus hidup node dalam dokumen.
- * **EN:** Primary Container class managing the entire node tree structure and lifecycle within a document.
+ * - **ID:** Kelas Container utama yang mengelola seluruh pohon node (tree structure) dan siklus hidup node dalam dokumen.
+ * - **EN:** Primary Container class managing the entire node tree structure and lifecycle within a document.
+ * 
+ * events:
+ * - node:change -> subscribe what ever change 
+ * - node:change:{property} -> subscribe what ever change spesific property
+ * - node:{id}:change -> subscribe what ever change by spesific id
+ * - node:{id}:change:{property} -> subscribe what ever change spesific property by spesific id
  */
 export default class NodeManager extends EventEmitter<NodeManagerEvents> {
 
@@ -48,7 +53,7 @@ export default class NodeManager extends EventEmitter<NodeManagerEvents> {
     constructor(public container: Container, nodes?: ShallowOptionalNode[]) {
         super();
         this.head = this.createNode("element", { tagName: "head" });
-        this.body = this.createNode("element", { tagName: "body", data: { style: { minHeight: "100vh", minWidth: "100vw" } } });
+        this.body = this.createNode("element", { tagName: "body", name: "Body" });
 
         if (nodes && Array.isArray(nodes)) {
             Array.from(nodes)
@@ -122,7 +127,7 @@ export default class NodeManager extends EventEmitter<NodeManagerEvents> {
 
         const newChildren = parent ? Array.from(this.getChildren(parent).values()) : [];
         if (parent) {
-            parent.fire("children", { target: parent, property: ["children"], oldValue: oldChildren, newValue: newChildren, value: node })
+            parent.fire("children", { property: "children", oldValue: oldChildren, newValue: newChildren, value: node })
         }
         return cloned;
     }
@@ -136,7 +141,7 @@ export default class NodeManager extends EventEmitter<NodeManagerEvents> {
 
         const newChildren = parent ? Array.from(this.getChildren(parent).values()) : [];
         if (parent) {
-            parent.fire("children", { target: parent, property: ["children"], oldValue: oldChildren, newValue: newChildren, value: node })
+            parent.fire("children", { property: "children", oldValue: oldChildren, newValue: newChildren, value: node })
         }
     }
 
@@ -197,8 +202,7 @@ export default class NodeManager extends EventEmitter<NodeManagerEvents> {
         const newChildren = [...this.getChildren(parent).values()].sort((a, b) => a.order - b.order);
 
         parent.fire("children:add", {
-            target: parent,
-            property: ["children"],
+            property: "children",
             oldValue: prevChildren,
             newValue: newChildren,
             value: node
@@ -429,7 +433,7 @@ export default class NodeManager extends EventEmitter<NodeManagerEvents> {
      * @param nodes - **ID:** Daftar node yang akan diperiksa / **EN:** Node instances to validate
      */
     public ensureOwner(...nodes: Node<any>[]) {
-        if (!nodes.every(e => e.manage === this)) {
+        if (!nodes.every(e => e.owner === this)) {
             throw new Error("Cannot find ancestors node is not owned by this document");
         }
     }

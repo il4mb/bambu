@@ -8,10 +8,12 @@ import {
     DeviceSwitch,
     HilightSpot,
     ThemeSwitch,
+    NodeTrees,
 } from "@bambu/react";
 import { BinderProvider, EventsManager, VarsManager } from "@bambu/binder";
 import { useMemo } from "react";
 import { Box } from "@mui/material";
+import { StyledManager } from "@bambu/styled";
 
 type AppProps = {};
 
@@ -31,18 +33,30 @@ export default function App({}: AppProps) {
             },
 
             {
-                type: "list",
-                id: "111",
+                type: "element",
                 data: {
-                    items: [
-                        {
-                            text: "hallo 1",
-                        },
-                        {
-                            text: "hallo 2",
-                        },
-                    ],
+                    style: {
+                        padding: "10px",
+                        display: "flex",
+                        gap: "10px",
+                    },
                 },
+                children: [
+                    {
+                        type: "list",
+                        id: "111",
+                        data: {
+                            items: [
+                                {
+                                    text: "hallo 1",
+                                },
+                                {
+                                    text: "hallo 2",
+                                },
+                            ],
+                        },
+                    },
+                ],
             },
             {
                 type: "text",
@@ -152,11 +166,20 @@ export default function App({}: AppProps) {
                 initialValue={initialValue}
             >
                 <BinderProvider>
-                    <Box sx={{ py: 1 }}>
+                    <Box sx={{ p: 1 }}>
                         <DeviceSwitch />
                         <ThemeSwitch />
                     </Box>
                     <div style={{ display: "flex", flex: 1 }}>
+                        <div
+                            style={{
+                                flexBasis: 260,
+                                minWidth: 200,
+                                width: "100%",
+                            }}
+                        >
+                            <NodeTrees />
+                        </div>
                         <Screen>
                             <Canvas />
                             <SpotsContainer>
@@ -170,7 +193,7 @@ export default function App({}: AppProps) {
                                 width: "100%",
                             }}
                         >
-                            {/* <StyledManager /> */}
+                            <StyledManager />
                             <EventsManager />
                             <VarsManager />
                         </div>

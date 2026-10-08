@@ -1,4 +1,4 @@
-import { defineModel } from "../helper";
+import { createIcon, defineModel } from "../helper";
 import { DefineModel } from "../../types/define";
 import ListComponent from "./ListComponent";
 
@@ -16,6 +16,7 @@ declare global {
 export default defineModel<'list'>({
     component: ListComponent,
     name: "list",
+    icon: createIcon("M20.4 17.5c.1 0 .2.1.2.2 0 .1-.1.2-.2.2H3.6c-.1 0-.2-.1-.2-.2 0-.1.1-.2.2-.2Zm0-5.7c.1 0 .2.1.2.2s-.1.2-.2.2H3.6c-.1 0-.2-.1-.2-.2s.1-.2.2-.2Zm0-5.7c.1 0 .2.1.2.2 0 .1-.1.2-.2.2H3.6c-.1 0-.2-.1-.2-.2 0-.1.1-.2.2-.2Z"),
     default: {
         data: {
             items: [{
@@ -60,8 +61,7 @@ export default defineModel<'list'>({
 
         node.on("change:data:items", () => updateList());
         node.on("change:data:map", () => updateList());
-        node.on("children:add", () => updateList());
-
+        node.on("children:add", (e) => updateList());
         updateList();
     },
 });

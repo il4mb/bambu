@@ -1,25 +1,38 @@
-import { useCallback, useRef, useState } from "react";
+import { useMemo, useRef } from "react";
 import CodeMirror, {
     ReactCodeMirrorRef,
     ViewUpdate,
 } from "@uiw/react-codemirror";
 import { json, jsonParseLinter } from "@codemirror/lang-json";
-import { useColorMode } from "@bambu/react";
+import { javascript } from "@codemirror/lang-javascript";
+import { useColorMode } from "@bambu/react"; // Assuming this is your custom hook
 import { Box } from "@mui/material";
-import { SETUP } from "./setup";
+import { SETUP } from "./setup"; // Assuming this is your CodeMirror basicSetup config
 import { linter, lintGutter } from "@codemirror/lint";
 
-export interface JsonEditorProps {
+export interface TextEditorProps {
     value: string;
     onChange?: (val: string, viewUpdate: ViewUpdate) => void;
+    lang?: "json" | "text" | "js";
 }
 
-export default function JsonEditor({
+export default function TextEditor({
     value: initialValue,
     onChange,
-}: JsonEditorProps) {
+    lang = "text",
+}: TextEditorProps) {
     const codeMirrorRef = useRef<ReactCodeMirrorRef | null>(null);
     const isDarkMode = useColorMode();
+    const extensions = useMemo(() => {
+        switch (lang) {
+            case "js":
+                return [javascript(), lintGutter()];
+            case "json":
+                return [json(), linter(jsonParseLinter()), lintGutter()];
+            default:
+                return [lintGutter()];
+        }
+    }, [lang]);
 
     return (
         <Box
@@ -29,7 +42,7 @@ export default function JsonEditor({
             width="100%"
             basicSetup={SETUP}
             theme={isDarkMode ? "dark" : "light"}
-            extensions={[json(), linter(jsonParseLinter()), lintGutter()]}
+            extensions={extensions}
             onChange={onChange}
             sx={{
                 display: "flex",
@@ -44,7 +57,7 @@ export default function JsonEditor({
                 },
                 "& .cm-scroller": {
                     overflowX: "unset",
-                    overflowY: undefined,
+                    overflowY: undefined, // "unset" is usually better if you want default scrolling
                 },
                 "& .cm-gutters-before": {
                     backgroundColor: "rgba(135, 135, 135, 0.25)",

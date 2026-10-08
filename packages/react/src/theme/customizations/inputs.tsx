@@ -4,21 +4,21 @@ import { COLOR_SCHEME } from "../themePrimitives";
 export const inputsCustomizations: Components<Theme> = {
     MuiInputBase: {
         styleOverrides: {
-            root: {
-                "& .MuiSelect-select": {
-                    fontSize: 12,
-                    padding: "2px 8px",
-                    "&:has( .MuiSvgIcon-root)": {
-                        paddingRight: 0,
-                    },
+            // root: {
+            //     "& .MuiSelect-select": {
+            //         // fontSize: 12,
+            //         padding: "2px 8px",
+            //         "&:has( .MuiSvgIcon-root)": {
+            //             paddingRight: 0,
+            //         },
 
-                    "& .MuiSvgIcon-root": {
-                        width: ".75em",
-                        height: ".75em",
-                        top: "calc(50% - .4em)",
-                    },
-                },
-            },
+            //         "& .MuiSvgIcon-root": {
+            //             width: ".75em",
+            //             height: ".75em",
+            //             top: "calc(50% - .4em)",
+            //         },
+            //     },
+            // },
         },
     },
 
@@ -30,13 +30,22 @@ export const inputsCustomizations: Components<Theme> = {
                 },
                 "& .MuiInputLabel-root": {
                     fontSize: "1em",
-                    transform: "translate(1em, 35%) scale(1)",
+                    // 1. Use a fixed pixel offset (e.g., 6px) instead of 35% for medium
+                    transform: "translate(1em, 6px) scale(1)",
                     "&[data-shrink=true]": {
-                        transform: "translate(1em, -50%) scale(.75)",
+                        transform: "translate(1em, -50%) scale(.65)",
+                    },
+                    // 2. Add specific alignment for the small size
+                    "&.MuiInputLabel-sizeSmall": {
+                        transform: "translate(1em, 4px) scale(1)",
+                        "&[data-shrink=true]": {
+                            transform: "translate(1.3em, -50%) scale(.75)",
+                        },
                     },
                 },
                 "& input, .MuiSelect-select": {
-                    padding: "2px 8px",
+                    padding: "4px 8px",
+                    fontSize: "1em",
                 },
                 "& .MuiSvgIcon-root": {
                     width: ".75em",
@@ -45,27 +54,6 @@ export const inputsCustomizations: Components<Theme> = {
                 },
             },
         },
-        variants: [
-            {
-                props: { size: "small" },
-                style: { fontSize: "10px" },
-            },
-            {
-                props: { size: "medium" },
-                style: { fontSize: "12px" },
-            },
-        ],
-    },
-
-    MuiSelect: {
-        styleOverrides: {
-            root: () => ({
-                background: "red",
-                display: "none",
-                fontSize: "10px",
-            }),
-        },
-
         variants: [
             {
                 props: { size: "small" },
@@ -140,7 +128,7 @@ export const inputsCustomizations: Components<Theme> = {
                                 padding: `${(i + 1) * 4}px`,
                             },
                         })),
-                    ]
+                    ],
                 };
             },
         },

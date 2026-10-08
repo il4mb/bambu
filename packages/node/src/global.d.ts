@@ -12,6 +12,7 @@ declare global {
 
     export type NodeObject = {
         id: string;
+        name?: string;
         tagName: keyof JSX.IntrinsicElements
         order: number;
         parent: string | null;

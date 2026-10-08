@@ -44,7 +44,9 @@ export default function HoveringSpot({}: Props) {
     }, [rects]);
 
     useEffect(() => {
+        console.log(Gesture)
         return Gesture.on("hovering", (e) => {
+            console.log(e);
             if (
                 Array.isArray(e.value) &&
                 e.value.every((e) => e instanceof Node)

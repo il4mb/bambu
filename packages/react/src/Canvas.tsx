@@ -24,7 +24,6 @@ export default function Canvas({}: CanvasProps) {
             nodeManager.head.set("element", iframeDoc.head);
             nodeManager.body.set("element", iframeDoc.body);
 
-            console.log("Iframe Loaded and Portals Ready");
             setReady(true);
         };
 

@@ -1,8 +1,8 @@
 import { Box, TextField } from "@mui/material";
 import { Window } from "@bambu/react";
 import { Descriptor } from "@bambu/node";
-import { ChangeEvent, useCallback, useEffect, useState } from "react";
-import JsonEditor from "@/editors/JsonEditor";
+import { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
+import TextEditor from "@/editors/JsonEditor";
 import { ViewUpdate } from "@uiw/react-codemirror";
 
 export interface VarWindowProps {
@@ -14,6 +14,26 @@ export interface VarWindowProps {
 }
 export default function VarWindow({ open = null, onClose }: VarWindowProps) {
     const [data, setData] = useState<Descriptor | null>(null);
+    const stringValue = useMemo(() => {
+        if (!data) return "";
+        if (data.type === "array" || data.type === "object") {
+            return JSON.stringify(data.value, null, 2);
+        }
+        if (
+            data.value &&
+            data.type === "unknown" &&
+            typeof data.value !== "string"
+        ) {
+            return JSON.stringify(data.value);
+        }
+        return String(data.value);
+    }, [data]);
+    const editorLang = useMemo(() => {
+        if (data?.type === "array" || data?.type === "object") {
+            return "json";
+        }
+        return "text";
+    }, [data]);
 
     const handleNameChange = (event: ChangeEvent<HTMLInputElement>) => {
         if (!data) return;
@@ -67,8 +87,9 @@ export default function VarWindow({ open = null, onClose }: VarWindowProps) {
                     overflow: "hidden",
                 }}
             >
-                <JsonEditor
-                    value={JSON.stringify(data.value, null, 2)}
+                <TextEditor
+                    lang={editorLang}
+                    value={stringValue}
                     onChange={handleValueChange}
                 />
             </Box>

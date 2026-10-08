@@ -1,6 +1,6 @@
-import { EventCallback, EventDetail, EventMap, SimpleEvent } from "../types";
+import { ChangeEvent, EventCallback, EventDetail, EventInstance, EventMap, SimpleEvent } from "../types";
 
-export default class EventEmitter<E extends EventMap = EventMap> {
+export default class EventEmitter<O extends object = object, E extends EventMap = EventMap> {
     protected listeners = new Map<keyof E, Set<EventCallback<any>>>();
     private pendingDispatchingEvent = new Set<EventCallback<any>>();
 
@@ -37,20 +37,53 @@ export default class EventEmitter<E extends EventMap = EventMap> {
         }
     }
 
-    /**
-     * Fire one or multiple events
-     */
-    public fire<K extends keyof E, O extends object = object, PV = any, V = PV>(events: K | K[], detail: EventDetail<O, PV, V>): SimpleEvent<O, PV, V> {
 
+    public fire<K extends keyof E, PV = any, V = PV>(events: K | K[], detail?: EventDetail<PV, V>): EventInstance<K, O, PV, V> {
+        let eventInstance = this.createEventInstance(Array.isArray(events) ? events[0] : events, detail);
+        if (Array.isArray(events)) {
+            for (const ev of events) {
+                if (eventInstance.isStopPropagation) break;
+                eventInstance.type = ev;
+                this.dispatch(eventInstance);
+            }
+        } else {
+            this.dispatch(eventInstance);
+        }
+        return eventInstance;
+    }
+
+    public createEventInstance<T extends keyof E, PV, V>(type: T, detail?: EventDetail<PV, V>): EventInstance<T, O, PV, V> {
         let isDefaultPrevented = false;
         let isStopPropagation = false;
 
-        const { target, value, ...change } = detail;
-        let eventInstance: SimpleEvent<O, PV, V> = {
-            type: Array.isArray(events) ? String(events[0]) : String(events),
-            target,
-            change,
-            value: (value ?? change.newValue) as any,
+        if (detail) {
+            return {
+                type,
+                target: this as unknown as O,
+                change: {
+                    property: detail.property,
+                    oldValue: detail.oldValue,
+                    newValue: detail.newValue
+                },
+                value: detail.value ?? detail.newValue as unknown as V,
+                get isDefaultPrevented() {
+                    return isDefaultPrevented;
+                },
+                get isStopPropagation() {
+                    return isStopPropagation;
+                },
+                preventDefault() {
+                    isDefaultPrevented = true;
+                },
+                stopPropagation() {
+                    isStopPropagation = true;
+                }
+            } as ChangeEvent<T, O, PV, V>;
+        }
+
+        return {
+            type,
+            target: this as unknown as O,
             get isDefaultPrevented() {
                 return isDefaultPrevented;
             },
@@ -63,23 +96,12 @@ export default class EventEmitter<E extends EventMap = EventMap> {
             stopPropagation() {
                 isStopPropagation = true;
             }
-        };
-
-        if (Array.isArray(events)) {
-            for (const ev of events) {
-                if (eventInstance.isStopPropagation) break;
-                this.dispatch(ev, eventInstance);
-            }
-            return eventInstance;
-        }
-
-        this.dispatch(events, eventInstance);
-        return eventInstance;
+        } as SimpleEvent<T, O>;
     }
 
-    protected dispatch<K extends keyof E>(type: K, event: SimpleEvent<any, any>) {
+    public dispatch<K extends keyof E>(event: EventInstance<K, any, any, any>) {
 
-        const set = this.listeners.get(type);
+        const set = this.listeners.get(event.type);
         if (!set) return;
 
         // Changed to for...of loop so we can break early if propagation is stopped
@@ -92,22 +114,12 @@ export default class EventEmitter<E extends EventMap = EventMap> {
                     this.pendingDispatchingEvent.add(callback);
                     callback(event);
                 } catch (e) {
+                    // @ts-ignore
                     console.error(`Error in event listener for ${event.type}:`, e);
                 } finally {
                     this.pendingDispatchingEvent.delete(callback);
                 }
             }
         }
-    }
-
-    static isEvent(object: any): object is SimpleEvent {
-        return object && typeof object == "object"
-            && "target" in object
-            && "type" in object
-            && "change" in object
-            && "isDefaultPrevented" in object
-            && "isStopPropagation" in object
-            && "preventDefault" in object
-            && "stopPropagation" in object;
     }
 }

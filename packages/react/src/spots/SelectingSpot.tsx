@@ -46,7 +46,6 @@ export default function SelectingSpot({}: Props) {
 
     useEffect(() => {
         return Gesture.on("selecting", (e) => {
-            console.log(e);
             setNodes(e.value);
         });
     }, []);

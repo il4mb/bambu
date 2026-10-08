@@ -1,30 +1,34 @@
 import { nanoid } from "nanoid";
 import Model from "./Model";
 import { isNumber } from "lodash";
-import { createElement, createRef, JSX, ReactNode, RefObject } from "react";
+import { createElement, createRef, FC, JSX, ReactNode, RefObject } from "react";
 import NodeData from "./NodeData";
 import NodeManager from "./libs/NodeManager";
 import EventEmitter from "./core/EventEmitter";
-import { AddPrefixToKeys, CreateEventMap, EventDetail, InferNodeData, INodeData, SimpleEvent } from "./types";
+import { AddPrefixToKeys, ChangeEvent, CreateEventMap, EventDetail, Icon, InferNodeData, INodeData, SimpleEvent } from "./types";
 import NodeRenderer from "./NodeRenderer";
 
 type NodeObjectWithElement = NodeObject & {
     element: HTMLElement | null
 };
-type NodeEvents<T extends ModuleName> = CreateEventMap<Node, { change: Node, }
-    & AddPrefixToKeys<'change:', NodeObjectWithElement>
-    & AddPrefixToKeys<'change:data:', InferNodeData<T>>
-    & { children: Node[] }
-    & AddPrefixToKeys<'children:', { add: { value: Node, propValue: Node[] }, remove: { value: Node, propValue: Node[] } }>>
+type NodeEvents<T extends ModuleName> =
+    {
+        select: SimpleEvent<Node<T>>
+    }
+    & CreateEventMap<Node, { change: Node }
+        & AddPrefixToKeys<'change:', NodeObjectWithElement>
+        & AddPrefixToKeys<'change:data:', InferNodeData<T>>
+        & { children: Node[] }
+        & AddPrefixToKeys<'children:', { add: { value: Node, propValue: Node[] }, remove: { value: Node, propValue: Node[] } }>>
 
-export default class Node<T extends ModuleName = ModuleName> extends EventEmitter<NodeEvents<T>> {
+export default class Node<T extends ModuleName = ModuleName> extends EventEmitter<Node<T>, NodeEvents<T>> {
 
     readonly state: NodeObject;
     private readonly elementRef: RefObject<Element | null> = createRef();
     readonly data: INodeData<T>;
 
     constructor(
-        public readonly manage: NodeManager,
+        public readonly owner: NodeManager,
         public readonly model: Model<T>,
         initial?: Partial<NodeObject>
     ) {
@@ -32,6 +36,7 @@ export default class Node<T extends ModuleName = ModuleName> extends EventEmitte
         super();
         this.state = {
             id: initial?.id || nanoid(),
+            name: initial?.name || this.model.name,
             tagName: initial?.tagName || this.model.default?.tagName || "div",
             order: initial?.order && isNumber(initial.order) ? Number(initial.order) : 0,
             parent: initial?.parent || null,
@@ -49,6 +54,14 @@ export default class Node<T extends ModuleName = ModuleName> extends EventEmitte
         return this.state.id;
     }
 
+    get icon(): Icon {
+        return this.model.icon ?? (() => null);
+    }
+
+    get name(): string {
+        return this.state.name ?? this.model.name ?? this.tagName;
+    }
+
     get tagName(): keyof JSX.IntrinsicElements {
         return this.state.tagName;
     }
@@ -62,15 +75,15 @@ export default class Node<T extends ModuleName = ModuleName> extends EventEmitte
     }
 
     get parent(): Node | null {
-        return this.state.parent ? this.manage.findNode(this.state.parent) : null;
+        return this.state.parent ? this.owner.findNode(this.state.parent) : null;
     }
 
     get descendants(): ReadonlyMap<string, Node> {
-        return this.manage.getDescendants(this);
+        return this.owner.getDescendants(this);
     }
 
     get children(): ReadonlyMap<string, Node> {
-        return this.manage.getChildren(this);
+        return this.owner.getChildren(this);
     }
 
     public set<K extends keyof NodeObjectWithElement>(key: K, newValue: NodeObjectWithElement[K]): void {
@@ -89,9 +102,9 @@ export default class Node<T extends ModuleName = ModuleName> extends EventEmitte
             this.state[key] = newValue;
         }
 
-        const eventDetail = { target: this, property: [key], newValue, oldValue };
+        const eventDetail = { property: key, newValue, oldValue };
         // @ts-ignore
-        this.fire([`change:${key}`, "change"], eventDetail);
+        this.fire(`change:${key}`, eventDetail);
     }
 
     public typeOf(type: ModuleName): boolean {
@@ -112,25 +125,26 @@ export default class Node<T extends ModuleName = ModuleName> extends EventEmitte
         return this.model.isAcceptable(this, target);
     }
 
-    public fire<K extends keyof NodeEvents<T>, O extends object = object, PV = any, V = PV>(events: K | K[], detail: EventDetail<O, PV, V>): SimpleEvent<O, PV, V> {
+    public fire<K extends keyof NodeEvents<T>, PV = any, V = PV>(events: K | K[], detail?: EventDetail<PV, V> | undefined): SimpleEvent<K, Node<T>> | ChangeEvent<K, Node<T>, PV, V> {
         const event = super.fire(events, detail);
+        if (typeof events === "string" && events.startsWith("change")) {
+            // @ts-ignore
+            super.fire("change", detail);
+        }
 
-        if (!event.isDefaultPrevented) {
-            const prop = detail.property.join(":");
-            this.manage.fire(
+        if (!event.isDefaultPrevented && detail) {
+            const prop = detail?.property;
+            this.owner.fire(
                 [
                     `node:${this.id}:change:${prop}`,
                     `node:${this.id}:change`,
                     `node:change:${prop}`,
                     "node:change"
-                ],
-                detail
+                ]
             );
         }
-
         return event;
     }
-
 
     public render(): ReactNode {
         const setRef = (element: HTMLElement | null = null) => {
@@ -151,11 +165,11 @@ export default class Node<T extends ModuleName = ModuleName> extends EventEmitte
 
 
     public clone(initial?: Partial<NodeObject>) {
-        return this.manage.cloneNode(this, initial);
+        return this.owner.cloneNode(this, initial);
     }
 
     public delete() {
-        this.manage.deleteNode(this);
+        this.owner.deleteNode(this);
     }
 
     public clearChildren() {
